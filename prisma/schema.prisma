@@ -54,6 +54,18 @@ model User {
   emailNotifications Boolean?      @default(true) @map("email_notifications")
   securityAlerts     Boolean?      @default(true) @map("security_alerts")
   marketingEmails    Boolean?      @default(false) @map("marketing_emails")
+  timezone           String?       @default("UTC")
+  language           String?       @default("en")
+  company            String?
+  phone              String?
+  address1           String?       @map("address1")
+  address2           String?       @map("address2")
+  city               String?
+  state              String?
+  zip                String?
+  country            String?
+  website            String?
+  apiTokenHash       String?       @map("api_token_hash")
   createdAt          DateTime      @default(now()) @map("created_at")
 
   ownedOrgs      Organization[]    @relation("OrgOwner")
@@ -234,7 +246,9 @@ model Role {
   scope       String           // "system" | "tenant"
   name        String           // system: super_admin | admin | user ; tenant: owner | admin | member
   label       String
+  description String?
   isDefault   Boolean          @default(false)
+  isActive    Boolean          @default(true) @map("is_active")
   permissions RolePermission[]
   users       UserRole[]
 
@@ -265,17 +279,20 @@ model UserRole {
 // ── Plans & subscriptions ─────────────────────────────────────
 
 model Plan {
-  id           Int            @id @default(autoincrement())
-  name         String
-  slug         String         @unique
-  description  String?
-  priceMonthly Decimal        @default(0) @map("price_monthly") @db.Decimal(10, 2)
-  currency     String         @default("USD")
-  isActive     Boolean        @default(true) @map("is_active")
-  features     PlanFeature[]
+  id             Int            @id @default(autoincrement())
+  name           String
+  slug           String         @unique
+  description    String?
+  priceMonthly   Decimal        @default(0) @map("price_monthly") @db.Decimal(10, 2)
+  currency       String         @default("USD")
+  billingCycle   String         @default("monthly") @map("billing_cycle")
+  trialDays      Int?           @map("trial_days")
+  requiresPayment Boolean        @default(true) @map("requires_payment")
+  isActive       Boolean        @default(true) @map("is_active")
+  features       PlanFeature[]
   subscriptions Subscription[]
-  createdAt    DateTime       @default(now()) @map("created_at")
-  updatedAt    DateTime       @updatedAt @map("updated_at")
+  createdAt      DateTime       @default(now()) @map("created_at")
+  updatedAt      DateTime       @updatedAt @map("updated_at")
 
   @@map("plans")
 }
@@ -308,4 +325,29 @@ model Subscription {
 
   @@index([planId])
   @@map("subscriptions")
+}
+
+// ── App settings (key/value) ──────────────────────────────────
+
+model AppSetting {
+  id        Int      @id @default(autoincrement())
+  key       String   @unique
+  value     String?
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@map("app_settings")
+}
+
+// ── Languages (admin-managed) ─────────────────────────────────
+
+model Language {
+  id        Int      @id @default(autoincrement())
+  code      String   @unique
+  name      String
+  region    String?
+  isActive  Boolean  @default(true) @map("is_active")
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@map("languages")
 }

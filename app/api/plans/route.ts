@@ -10,7 +10,6 @@ export async function GET() {
 
   try {
     const plans = await prisma.plan.findMany({
-      where: { isActive: true },
       include: { features: true },
       orderBy: { priceMonthly: "asc" },
     });
@@ -22,6 +21,10 @@ export async function GET() {
         description: p.description,
         priceMonthly: p.priceMonthly.toString(),
         currency: p.currency,
+        billingCycle: p.billingCycle,
+        trialDays: p.trialDays,
+        requiresPayment: p.requiresPayment,
+        isActive: p.isActive,
         features: p.features.map((f) => ({ key: f.key, label: f.label, value: f.value })),
       })),
     });
@@ -39,8 +42,11 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Forbidden" }, { status: 403 });
   }
 
-  const { name, slug, description, priceMonthly, currency, features } = await req.json();
+  const { name, slug, description, priceMonthly, currency, billingCycle, trialDays, requiresPayment, isActive, features } = await req.json();
   if (!name || !slug) return NextResponse.json({ error: "Name and slug are required" }, { status: 400 });
+
+  const existing = await prisma.plan.findUnique({ where: { slug } });
+  if (existing) return NextResponse.json({ error: "A plan with this slug already exists" }, { status: 409 });
 
   try {
     const plan = await prisma.plan.create({
@@ -50,6 +56,10 @@ export async function POST(req: NextRequest) {
         description: description || null,
         priceMonthly: priceMonthly ?? 0,
         currency: currency || "USD",
+        billingCycle: billingCycle === "yearly" ? "yearly" : "monthly",
+        trialDays: trialDays != null ? parseInt(trialDays) : null,
+        requiresPayment: requiresPayment !== undefined ? Boolean(requiresPayment) : true,
+        isActive: isActive !== undefined ? Boolean(isActive) : true,
         features: features?.length
           ? { create: features.map((f: { key: string; label?: string; value?: string }) => ({ key: f.key, label: f.label || f.key, value: f.value || null })) }
           : undefined,

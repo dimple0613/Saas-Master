@@ -19,15 +19,21 @@ Planned work to bring the codebase in line with `PROJECT.md`. Ordered by depende
 
 - ✅ **6. Permission/Role models** — `Permission`, `Role`, `RolePermission`, `UserRole` + seed (`seedPermissionsAndRoles()`).
 - ✅ **7. `hasPermission` helpers** — `hasSystemPermission` / `hasTenantPermission` / `getOrgMembership` in `lib/permissions.ts`; JWT embeds system permissions for middleware; route handlers migrated to permission checks.
-- ❌ **8. Roles & permissions management UI** (system admin).
+- ✅ **8. Roles & permissions management UI** (system admin) — `/admin/roles` with create/edit/disable/delete; `/api/roles`, `/api/roles/[id]`, `/api/permissions`; permission checkboxes grouped by scope.
 - ❌ **9. Tenant roles & permissions view** (tenant dashboard).
 
 ## Phase 4 — Plans, subscriptions & billing
 
-- ✅ **10. Plan + plan-feature models** — seeded (Free/Pro/Enterprise); `GET/POST /api/plans`.
-- ✅ **11. Subscription model** — org↔plan (unique per org); `GET/PATCH /api/subscriptions`; plan badges on Accounts page.
+- ✅ **10. Plan + plan-feature models** — seeded (Free/Pro/Enterprise); full CRUD via `GET/POST /api/plans` + `PUT/DELETE /api/plans/[id]`; plans page supports edit, activate/deactivate, delete (blocked while in use); billing cycle, trial days and `requiresPayment` added.
+- ✅ **11. Subscription model** — org↔plan (unique per org); `GET/PATCH /api/subscriptions`; plan badges on Accounts page; change-plan control on Plans page.
 - ⚠️ **12. Tenant detail view: subscription section** — subscription data exposed via `/api/orgs/[id]`; dedicated billing UI pending.
 - ❌ **13. Billing/payment integration** (decision required).
+
+## Phase 4b — Admin modules (Phases 1–3 scope)
+
+- ✅ **Dashboard extension** — superadmin dashboard now shows Plans & Subscriptions cards (total/active plans, active subscribers, MRR) and a plan-distribution panel (`SubscriptionStats`), backed by the extended `/api/dashboard`.
+- ✅ **Profile extensions** — `/api/profile` GET/PUT returns/updates timezone, language, company, phone, address, city, state, zip, country, website; profile UI gained an editable "Company & Address" section and a language picker sourced from active DB languages.
+- ✅ **Settings (system)** — `/admin/settings` with a Languages tab (add/edit/toggle/delete via `/api/languages` + `/api/languages/[id]`, gated by `languages.manage`) and a System Settings tab (key/value editor via `/api/settings`, gated by `system.settings`).
 
 ## Phase 5 — Sessions, email & audit
 
@@ -57,4 +63,4 @@ Planned work to bring the codebase in line with `PROJECT.md`. Ordered by depende
 
 1. Apply migration + seed against a running PostgreSQL (`npx prisma migrate deploy && npx prisma db seed`), then boot `npm run dev` and verify OAuth + sessions end-to-end.
 2. Add real Google/Apple OAuth credentials to `.env` (see `docs/AUTH_FLOW.md`).
-3. Continue with Phase 3/4/5 UI items (roles/permissions + plans management, audit log page, tenant billing view).
+3. Continue with remaining tenant-side items (tenant roles & permissions view, tenant billing/subscription view) and Phase 5–8 items (email verification, audit log page, tests, deployment).

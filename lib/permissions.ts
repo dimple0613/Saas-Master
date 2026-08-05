@@ -13,6 +13,7 @@ export const SYSTEM_PERMISSIONS = [
   { key: "subscription.view", label: "View subscriptions" },
   { key: "roles.manage", label: "Manage roles & permissions" },
   { key: "audit.view", label: "View audit logs" },
+  { key: "languages.manage", label: "Manage languages" },
   { key: "system.settings", label: "Manage system settings" },
 ] as const;
 
@@ -45,6 +46,7 @@ export const DEFAULT_ROLES = [
     scope: "system" as Scope,
     name: "super_admin",
     label: "Super Admin",
+    description: "Full platform access with all system permissions.",
     isDefault: true,
     permissions: SYSTEM_PERMISSIONS.map((p) => p.key),
   },
@@ -52,6 +54,7 @@ export const DEFAULT_ROLES = [
     scope: "system" as Scope,
     name: "admin",
     label: "Admin",
+    description: "Manages platform users, tenants, subscriptions and audit logs.",
     isDefault: true,
     permissions: [
       "dashboard.view",
@@ -67,6 +70,7 @@ export const DEFAULT_ROLES = [
     scope: "system" as Scope,
     name: "user",
     label: "User",
+    description: "Standard platform user with tenant dashboard access.",
     isDefault: true,
     permissions: ["dashboard.view"],
   },
@@ -74,6 +78,7 @@ export const DEFAULT_ROLES = [
     scope: "tenant" as Scope,
     name: "owner",
     label: "Owner",
+    description: "Full tenant access including member management and settings.",
     isDefault: true,
     permissions: TENANT_PERMISSIONS.map((p) => p.key),
   },
@@ -81,6 +86,7 @@ export const DEFAULT_ROLES = [
     scope: "tenant" as Scope,
     name: "admin",
     label: "Admin",
+    description: "Manages tenant members, invites and organization data.",
     isDefault: true,
     permissions: [
       "dashboard.view",
@@ -97,6 +103,7 @@ export const DEFAULT_ROLES = [
     scope: "tenant" as Scope,
     name: "member",
     label: "Member",
+    description: "Read-only tenant member with personal profile access.",
     isDefault: true,
     permissions: ["dashboard.view", "member.view", "org.data", "profile.manage"],
   },
@@ -217,8 +224,8 @@ export async function seedPermissionsAndRoles() {
   for (const role of DEFAULT_ROLES) {
     const roleRec = await prisma.role.upsert({
       where: { scope_name: { scope: role.scope, name: role.name } },
-      update: { label: role.label, isDefault: role.isDefault },
-      create: { scope: role.scope, name: role.name, label: role.label, isDefault: role.isDefault },
+      update: { label: role.label, description: role.description, isDefault: role.isDefault },
+      create: { scope: role.scope, name: role.name, label: role.label, description: role.description, isDefault: role.isDefault },
     });
 
     // Link permissions

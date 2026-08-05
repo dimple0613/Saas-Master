@@ -25,6 +25,18 @@ export async function GET(req: NextRequest) {
       const totalOrgs = await prisma.organization.count();
       const totalUsers = await prisma.user.count();
       const totalRecords = await prisma.orgProfileData.count();
+      const totalPlans = await prisma.plan.count();
+      const activePlans = await prisma.plan.count({ where: { isActive: true } });
+      const activeSubscriptions = await prisma.subscription.count({ where: { status: "active" } });
+      const trialSubscriptions = await prisma.subscription.count({ where: { status: "trialing" } });
+      const canceledSubscriptions = await prisma.subscription.count({ where: { status: "canceled" } });
+      const mrrResult = await prisma.$queryRawUnsafe<{ mrr: { toNumber: () => number } }[]>(`
+        SELECT COALESCE(SUM(p.price_monthly), 0) AS mrr
+        FROM subscriptions s
+        JOIN plans p ON p.id = s.plan_id
+        WHERE s.status IN ('active', 'trialing')
+      `);
+      const mrr = mrrResult.length ? mrrResult[0].mrr.toNumber() : 0;
       const recentActivity = await prisma.activityLog.findMany({
         take: 5,
         orderBy: { createdAt: "desc" },
@@ -37,8 +49,30 @@ export async function GET(req: NextRequest) {
         GROUP BY TO_CHAR(created_at, 'Mon'), DATE_TRUNC('month', created_at)
         ORDER BY DATE_TRUNC('month', created_at)
       `);
+      const planData = await prisma.plan.findMany({
+        include: { _count: { select: { subscriptions: true } } },
+        orderBy: { priceMonthly: "asc" },
+      });
       return NextResponse.json({
         stats: { totalOrgs, totalUsers, totalRecords, activeNow: totalUsers },
+        subscriptionStats: {
+          totalPlans,
+          activePlans,
+          activeSubscriptions,
+          trialSubscriptions,
+          canceledSubscriptions,
+          mrr,
+        },
+        planData: planData.map((p) => ({
+          id: p.id,
+          name: p.name,
+          slug: p.slug,
+          priceMonthly: p.priceMonthly.toString(),
+          currency: p.currency,
+          billingCycle: p.billingCycle,
+          isActive: p.isActive,
+          subscribers: p._count.subscriptions,
+        })),
         chartData: monthlyData.map((d) => ({ month: d.month, value: Number(d.count) })),
         recentActivity: recentActivity.map((a) => ({
           name: `${a.user.firstName || ""} ${a.user.lastName || ""}`.trim() || "Unknown",

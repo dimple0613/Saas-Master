@@ -50,8 +50,8 @@ Authorization uses `hasSystemPermission(userId, key)` and `hasTenantPermission(u
 
 | Method | Path | Auth | Description |
 |---|---|---|---|
-| GET | `/api/profile` | Any user | Current profile |
-| PUT | `/api/profile` | Any user | Update `first_name` / `last_name` |
+| GET | `/api/profile` | Any user | Current profile (incl. timezone, language, company, phone, address, city, state, zip, country, website) |
+| PUT | `/api/profile` | Any user | Update profile fields (first/last name + all contact/address fields above) |
 | PUT | `/api/profile/password` | Any user | Change password (verifies current) |
 | GET | `/api/profile/notifications` | Any user | Notification preferences |
 | PUT | `/api/profile/notifications` | Any user | Update notification preferences |
@@ -62,17 +62,42 @@ Authorization uses `hasSystemPermission(userId, key)` and `hasTenantPermission(u
 
 | Method | Path | Auth | Description |
 |---|---|---|---|
-| GET | `/api/dashboard` | Any user | Role-scoped dashboard metrics. Non-superadmins may only query orgs they belong to via `orgId` (else 403) |
+| GET | `/api/dashboard` | Any user | Role-scoped dashboard metrics. Non-superadmins may only query orgs they belong to via `orgId` (else 403). Superadmins also receive `subscriptionStats` (plans, subscribers, MRR) and `planData` (plan adoption) |
 | GET | `/api/activity` | Any user | Audit/activity logs. superadmin sees all orgs; others see only orgs they belong to; `org_id` for a foreign org returns 403 |
+
+## Roles & Permissions (System Admin)
+
+| Method | Path | Auth | Description |
+|---|---|---|---|
+| GET | `/api/roles` | `roles.manage` | All roles with scope, status, permission keys, and member counts |
+| POST | `/api/roles` | `roles.manage` | Create role. Body: `{ scope, name, label, description?, isActive?, permissions?: string[] }` |
+| GET | `/api/roles/[id]` | Any authenticated | Single role with its permissions |
+| PUT | `/api/roles/[id]` | `roles.manage` | Update role (label, description, isActive, permission mapping) |
+| DELETE | `/api/roles/[id]` | `roles.manage` | Delete a non-default role |
+| GET | `/api/permissions` | `roles.manage` | Permission catalog grouped by scope (`system` / `tenant`) |
 
 ## Plans & Subscriptions (System Admin)
 
 | Method | Path | Auth | Description |
 |---|---|---|---|
-| GET | `/api/plans` | Any user | List active plans with features |
-| POST | `/api/plans` | `plan.manage` | Create a plan. Body: `{ name, slug, description?, priceMonthly?, currency?, features? }` |
+| GET | `/api/plans` | Any user | All plans (active + inactive) with features |
+| POST | `/api/plans` | `plan.manage` | Create a plan. Body: `{ name, slug, description?, priceMonthly?, currency?, billingCycle?, trialDays?, requiresPayment?, isActive?, features? }` |
+| GET | `/api/plans/[id]` | Any authenticated | Single plan with features |
+| PUT | `/api/plans/[id]` | `plan.manage` | Update plan (any subset of fields; features replaced when provided) |
+| DELETE | `/api/plans/[id]` | `plan.manage` | Delete a plan (blocked with 409 if it has subscriptions) |
 | GET | `/api/subscriptions` | `subscription.view` | All subscriptions with org + plan |
 | PATCH | `/api/subscriptions` | `plan.manage` | Change org plan. Body: `{ orgId, planId }` |
+
+## Languages & Settings (System Admin)
+
+| Method | Path | Auth | Description |
+|---|---|---|---|
+| GET | `/api/languages` | Any user | All languages; pass `?active=true` for active only |
+| POST | `/api/languages` | `languages.manage` | Add language. Body: `{ code, name, region?, isActive? }` |
+| PUT | `/api/languages/[id]` | `languages.manage` | Update language |
+| DELETE | `/api/languages/[id]` | `languages.manage` | Delete language |
+| GET | `/api/settings` | Any authenticated | List app settings (key/value) |
+| PUT | `/api/settings` | `system.settings` | Upsert settings. Body: `{ settings: [{ key, value }] }` |
 
 ## Accounts (System Admin)
 

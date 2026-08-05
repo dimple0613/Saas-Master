@@ -11,6 +11,20 @@ It ships with two dashboard areas:
 
 Plus complete auth flows: signup, login, forgot/reset password (with email), member invitations, and email templates.
 
+### Platform admin modules
+
+The `/admin/*` area includes:
+
+| Module | Route | What it does |
+|---|---|---|
+| Dashboard | `/admin` | Platform KPIs, activity chart/feed, and Plans & Subscriptions overview (total/active plans, subscribers, MRR, plan distribution) |
+| Users | `/admin/users` | Manage platform users (status, roles) |
+| Accounts | `/admin/accounts` | Manage tenant organizations and their plan badges |
+| Roles | `/admin/roles` | Create/edit/disable/delete roles and assign permissions grouped by scope (`system`/`tenant`) |
+| Plans | `/admin/plans` | Full plan CRUD (price, billing cycle, trial days, features) plus subscriptions table with change-plan control |
+| Settings | `/admin/settings` | Manage platform languages and key/value app settings |
+| Profile | `/admin/profile` | Own profile: contact info, company/address, timezone, language, security, notifications, sessions |
+
 ---
 
 ## 1. Tech Stack

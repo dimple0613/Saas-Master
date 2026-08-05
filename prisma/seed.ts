@@ -260,6 +260,9 @@ async function main() {
       slug: "free",
       description: "For individuals and small teams getting started",
       priceMonthly: 0,
+      billingCycle: "monthly",
+      trialDays: null,
+      requiresPayment: false,
       features: [
         { key: "members", label: "Team members", value: "5" },
         { key: "storage", label: "Storage", value: "1 GB" },
@@ -271,6 +274,9 @@ async function main() {
       slug: "pro",
       description: "For growing teams that need the full toolkit",
       priceMonthly: 49,
+      billingCycle: "monthly",
+      trialDays: 14,
+      requiresPayment: true,
       features: [
         { key: "members", label: "Team members", value: "25" },
         { key: "storage", label: "Storage", value: "25 GB" },
@@ -283,6 +289,9 @@ async function main() {
       slug: "enterprise",
       description: "For organizations with advanced security & support",
       priceMonthly: 199,
+      billingCycle: "yearly",
+      trialDays: 30,
+      requiresPayment: true,
       features: [
         { key: "members", label: "Team members", value: "Unlimited" },
         { key: "storage", label: "Storage", value: "Unlimited" },
@@ -301,6 +310,9 @@ async function main() {
         name: p.name,
         description: p.description,
         priceMonthly: p.priceMonthly,
+        billingCycle: p.billingCycle,
+        trialDays: p.trialDays,
+        requiresPayment: p.requiresPayment,
         isActive: true,
       },
       create: {
@@ -308,6 +320,9 @@ async function main() {
         slug: p.slug,
         description: p.description,
         priceMonthly: p.priceMonthly,
+        billingCycle: p.billingCycle,
+        trialDays: p.trialDays,
+        requiresPayment: p.requiresPayment,
         isActive: true,
       },
     });
@@ -334,8 +349,94 @@ async function main() {
       .catch(() => {});
   }
 
-  console.log("\n✅ Seed complete!\n");
-  console.log("Users:");
+  // ── App settings (defaults) ──────────────────────────────
+  const defaultSettings: Record<string, string> = {
+    site_name: "Saas Master",
+    site_url: process.env.APP_URL || "http://localhost:3000",
+    site_description: "Multi-tenant SaaS starter",
+    light_logo: "",
+    dark_logo: "",
+    favicon: "",
+    default_language: "en",
+    frontend_theme: "default",
+    backend_theme: "default",
+    login_keep_signed_in: "7",
+    site_status: "online",
+    captcha_engine: "none",
+    captcha_site_key: "",
+    captcha_secret_key: "",
+    captcha_login: "false",
+    captcha_registration: "false",
+    captcha_embedded: "false",
+    captcha_signup: "false",
+    registration_enabled: "true",
+    customer_api_enabled: "true",
+    free_trial_resubscribe: "false",
+    email_confirmation: "false",
+    two_factor: "false",
+    mail_driver: "smtp",
+    smtp_host: "",
+    smtp_port: "587",
+    smtp_encryption: "tls",
+    smtp_username: "",
+    smtp_password: "",
+    mail_from_email: "",
+    mail_from_name: "",
+    auto_billing: "true",
+    payment_grace_period: "3",
+    tax_enabled: "false",
+    license_status: "Unlicensed",
+    license_type: "Regular License",
+    invoice_number: "1000",
+    invoice_format: "[INVOICE_NUMBER]",
+    global_blacklist: "",
+    tracking_https: "true",
+    automation_webhook: "",
+    custom_script: "",
+    php_path: "",
+    cron_command: "php artisan cron",
+    current_version: "1.0.0",
+  };
+
+  for (const [key, value] of Object.entries(defaultSettings)) {
+    await prisma.appSetting.upsert({
+      where: { key },
+      update: {},
+      create: { key, value },
+    });
+  }
+
+  // ── Languages (defaults) ─────────────────────────────────
+  const defaultLanguages = [
+    { code: "en", name: "English", region: "United States" },
+    { code: "fr", name: "Français", region: "France" },
+    { code: "de", name: "Deutsch", region: "Germany" },
+    { code: "es", name: "Español", region: "Spain" },
+    { code: "it", name: "Italiano", region: "Italy" },
+    { code: "pt", name: "Português", region: "Portugal" },
+    { code: "nl", name: "Nederlands", region: "Netherlands" },
+    { code: "ru", name: "Русский", region: "Russia" },
+    { code: "uk", name: "Українська", region: "Ukraine" },
+    { code: "tr", name: "Türkçe", region: "Turkey" },
+    { code: "ar", name: "العربية", region: "Tunisia" },
+    { code: "zh", name: "中文", region: "China" },
+    { code: "ja", name: "日本語", region: "Japan" },
+    { code: "ko", name: "한국어", region: "South Korea" },
+    { code: "vi", name: "Tiếng Việt", region: "Vietnam" },
+    { code: "pl", name: "Polski", region: "Poland" },
+    { code: "cs", name: "Čeština", region: "Czechia" },
+    { code: "hi", name: "हिन्दी", region: "India" },
+  ];
+
+  for (const l of defaultLanguages) {
+    await prisma.language.upsert({
+      where: { code: l.code },
+      update: { name: l.name, region: l.region, isActive: true },
+      create: { code: l.code, name: l.name, region: l.region, isActive: true },
+    });
+  }
+
+  console.log("\n✅ Seed complete!\n");  console.log("Users:");
   console.log("  superadmin@example.com / password123 (superadmin)");
   console.log("  admin@example.com      / password123 (admin)");
   console.log("  user@example.com       / password123 (user)");

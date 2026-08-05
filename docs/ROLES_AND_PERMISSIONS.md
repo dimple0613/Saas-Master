@@ -16,7 +16,7 @@ Enums: `PlatformRole` (`superadmin`, `admin`, `user`) on `User`. Roles table row
 
 System permissions (`Permission` where `scope = "system"`):
 
-`dashboard.view`, `user.manage`, `user.role_change`, `tenant.manage`, `tenant.view`, `plan.manage`, `subscription.view`, `roles.manage`, `audit.view`, `system.settings`
+`dashboard.view`, `user.manage`, `user.role_change`, `tenant.manage`, `tenant.view`, `plan.manage`, `subscription.view`, `roles.manage`, `audit.view`, `languages.manage`, `system.settings`
 
 > PROJECT.md lists `super_admin` and `admin`. The enum uses `superadmin`; the `roles` table uses `super_admin`. Extra `user` role retained for non-admin platform users.
 
@@ -51,11 +51,10 @@ Tenant permissions (`Permission` where `scope = "tenant"`):
 | Permission model | ✅ `Permission`/`Role`/`RolePermission`/`UserRole` + seed |
 | Permission-based checks | ✅ system + tenant API guards, JWT-based middleware |
 | System vs tenant scope separation | ✅ `scope` column on `Permission`/`Role` |
-| Roles & permissions management UI | ❌ Not present (data model + helpers exist) |
+| Roles & permissions management UI | ✅ `/admin/roles` (list, create, edit permissions, disable, delete) + `/api/roles`, `/api/roles/[id]`, `/api/permissions` |
 | Extra `UserRole` assignment UI | ❌ Not present (model exists, used by `hasSystemPermission`) |
 
 ## Planned
 
-- Roles & permissions management UI (list roles, edit role→permission mapping, assign extra `UserRole`s).
 - Tenant roles & permissions viewer for org admins.
 - Client-side permission hook mirroring `session.user.permissions`.

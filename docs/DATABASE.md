@@ -34,6 +34,14 @@ enum SubscriptionStatus { active trialing past_due canceled expired }
 | `image` | String? | OAuth avatar |
 | `resetToken` / `resetTokenExpiry` | String? / DateTime? | `reset_token` / `reset_token_expiry` |
 | `emailNotifications` / `securityAlerts` / `marketingEmails` | Boolean? | `email_notifications` / `security_alerts` / `marketing_emails` |
+| `timezone` | String? (default `UTC`) | |
+| `language` | String? (default `en`) | locale code, matches `languages.code` |
+| `company` | String? | |
+| `phone` | String? | |
+| `address1` / `address2` | String? | |
+| `city` / `state` / `zip` / `country` | String? | |
+| `website` | String? | |
+| `apiTokenHash` | String? | `api_token_hash` — future API tokens (SHA-256) |
 | `createdAt` | DateTime | `created_at` |
 
 Relations: `ownedOrgs`, `orgMemberships`, `invitedMembers`, `sentInvitations`, `createdData`, `activityLogs`, `accounts`, `sessions`, `activeSessions`, `userRoles`.
@@ -125,15 +133,20 @@ Indexes: `orgId`, `userId`, `createdAt`.
 ### Permissions & roles
 
 - `Permission` — `scope` ("system"/"tenant") + `key` + `label`; unique `(scope, key)`.
-- `Role` — `scope` + `name` + `label` + `isDefault`; unique `(scope, name)`. Defaults: system `super_admin`/`admin`/`user`; tenant `owner`/`admin`/`member`.
+- `Role` — `scope` + `name` + `label` + `description` + `isDefault` + `isActive`; unique `(scope, name)`. Defaults: system `super_admin`/`admin`/`user`; tenant `owner`/`admin`/`member`.
 - `RolePermission` — join `(role_id, permission_id)`.
 - `UserRole` — optional extra roles granted to a user `(user_id, role_id)`.
 
 ### Plans & subscriptions
 
-- `Plan` — `name`, `slug` (unique), `description`, `priceMonthly` (`DECIMAL(10,2)`), `currency`, `isActive`, timestamps.
+- `Plan` — `name`, `slug` (unique), `description`, `priceMonthly` (`DECIMAL(10,2)`), `currency`, `billingCycle` (`monthly`/`yearly`), `trialDays`, `requiresPayment`, `isActive`, timestamps.
 - `PlanFeature` — `planId`, `key`, `label`, `value` (seeded: Free / Pro / Enterprise).
 - `Subscription` — `orgId` (**unique** — one active plan per tenant), `planId`, `status` (`SubscriptionStatus`), `startsAt`, `endsAt`. Change plan via `PATCH /api/subscriptions`.
+
+### App settings & languages
+
+- `AppSetting` — `key` (unique) + `value`; arbitrary key/value config, managed via `GET/PUT /api/settings` (`system.settings`).
+- `Language` — `code` (unique), `name`, `region`, `isActive`; seeded with 18 common locales, managed via `/api/languages` (`languages.manage`). Active languages power the profile language picker.
 
 ## Applying the Migration
 

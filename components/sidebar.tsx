@@ -3,7 +3,7 @@
 import { useSession } from "next-auth/react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Home, Building2, ChevronUp, Users, Bell, Settings, CreditCard } from "lucide-react";
+import { Home, Building2, ChevronUp, Users, Bell, Settings, CreditCard, Shield } from "lucide-react";
 import { OrgSwitcher } from "./org-switcher";
 import type { ShellVariant } from "./shell";
 
@@ -154,7 +154,9 @@ function getNavItems(variant: ShellVariant) {
           { label: "Dashboard", href: "/admin", icon: Home },
           { label: "Users", href: "/admin/users", icon: Users },
           { label: "Accounts", href: "/admin/accounts", icon: Building2 },
+          { label: "Roles", href: "/admin/roles", icon: Shield },
           { label: "Plans", href: "/admin/plans", icon: CreditCard },
+          { label: "Settings", href: "/admin/settings", icon: Settings },
         ],
       },
     ];

@@ -17,6 +17,17 @@ interface Profile {
   org_name: string;
   role: string;
   created_at: string;
+  timezone: string | null;
+  language: string | null;
+  company: string | null;
+  phone: string | null;
+  address1: string | null;
+  address2: string | null;
+  city: string | null;
+  state: string | null;
+  zip: string | null;
+  country: string | null;
+  website: string | null;
 }
 
 interface SessionInfo {
@@ -29,12 +40,51 @@ interface SessionInfo {
   isCurrent: boolean;
 }
 
+function Field({
+  label,
+  editing,
+  value,
+  onChange,
+  type = "text",
+  placeholder,
+}: {
+  label: string;
+  editing: boolean;
+  value: string;
+  onChange: (v: string) => void;
+  type?: string;
+  placeholder?: string;
+}) {
+  return (
+    <div>
+      <Label className="mb-1 block text-xs text-muted-foreground">{label}</Label>
+      {editing ? (
+        <Input type={type} value={value} onChange={(e) => onChange(e.target.value)} placeholder={placeholder} />
+      ) : (
+        <p className="text-sm font-medium text-foreground">{value || "—"}</p>
+      )}
+    </div>
+  );
+}
+
 export function ProfilePage() {
   const [profile, setProfile] = useState<Profile | null>(null);
   const [activeTab, setActiveTab] = useState<"profile" | "security" | "notifications" | "sessions">("profile");
   const [editing, setEditing] = useState(false);
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
+  const [timezone, setTimezone] = useState("UTC");
+  const [language, setLanguage] = useState("en");
+  const [company, setCompany] = useState("");
+  const [phone, setPhone] = useState("");
+  const [address1, setAddress1] = useState("");
+  const [address2, setAddress2] = useState("");
+  const [city, setCity] = useState("");
+  const [state, setState] = useState("");
+  const [zip, setZip] = useState("");
+  const [country, setCountry] = useState("");
+  const [website, setWebsite] = useState("");
+  const [languages, setLanguages] = useState<{ code: string; name: string }[]>([]);
   const [msg, setMsg] = useState({ type: "" as "" | "success" | "error", text: "" });
 
   // Password
@@ -67,6 +117,20 @@ export function ProfilePage() {
       setProfile(data);
       setFirstName(data.first_name || "");
       setLastName(data.last_name || "");
+      setTimezone(data.timezone || "UTC");
+      setLanguage(data.language || "en");
+      setCompany(data.company || "");
+      setPhone(data.phone || "");
+      setAddress1(data.address1 || "");
+      setAddress2(data.address2 || "");
+      setCity(data.city || "");
+      setState(data.state || "");
+      setZip(data.zip || "");
+      setCountry(data.country || "");
+      setWebsite(data.website || "");
+    });
+    fetch("/api/languages?active=true").then((r) => r.json()).then((data) => {
+      setLanguages(data.languages || []);
     });
     fetch("/api/profile/notifications").then((r) => r.json()).then((data) => {
       setNotifEmail(data.email_notifications);
@@ -78,11 +142,25 @@ export function ProfilePage() {
 
   async function saveProfile() {
     if (!firstName.trim()) { setMsg({ type: "error", text: "First name is required" }); return; }
-    const res = await fetch("/api/profile", { method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ first_name: firstName, last_name: lastName }) });
+    const res = await fetch("/api/profile", { method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify({
+      first_name: firstName,
+      last_name: lastName,
+      timezone,
+      language,
+      company,
+      phone,
+      address1,
+      address2,
+      city,
+      state,
+      zip,
+      country,
+      website,
+    }) });
     const data = await res.json();
     if (data.error) { setMsg({ type: "error", text: data.error }); } else {
       setMsg({ type: "success", text: "Profile updated" });
-      setProfile((p) => p ? { ...p, first_name: firstName, last_name: lastName } : p);
+      setProfile((p) => p ? { ...p, first_name: firstName, last_name: lastName, timezone, language, company, phone, address1, address2, city, state, zip, country, website } : p);
       setEditing(false);
     }
   }
@@ -148,18 +226,59 @@ export function ProfilePage() {
                   </div>
                 </div>
                 <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-                  <div>
-                    <Label className="mb-1 block text-xs text-muted-foreground">First Name</Label>
-                    {editing ? <Input value={firstName} onChange={(e) => setFirstName(e.target.value)} /> : <p className="text-sm font-medium text-foreground">{profile.first_name || "—"}</p>}
-                  </div>
-                  <div>
-                    <Label className="mb-1 block text-xs text-muted-foreground">Last Name</Label>
-                    {editing ? <Input value={lastName} onChange={(e) => setLastName(e.target.value)} /> : <p className="text-sm font-medium text-foreground">{profile.last_name || "—"}</p>}
-                  </div>
+                  <Field label="First Name" editing={editing} value={firstName} onChange={setFirstName} />
+                  <Field label="Last Name" editing={editing} value={lastName} onChange={setLastName} />
                   <div><Label className="mb-1 block text-xs text-muted-foreground">Email</Label><p className="text-sm font-medium text-foreground">{profile.email}</p></div>
                   <div><Label className="mb-1 block text-xs text-muted-foreground">Role</Label><p className="text-sm font-medium text-foreground capitalize">{profile.role}</p></div>
                   <div><Label className="mb-1 block text-xs text-muted-foreground">Member Since</Label><p className="text-sm font-medium text-foreground">{new Date(profile.created_at).toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" })}</p></div>
+                  <div>
+                    <Label className="mb-1 block text-xs text-muted-foreground">Timezone</Label>
+                    {editing ? (
+                      <Input value={timezone} onChange={(e) => setTimezone(e.target.value)} placeholder="UTC" />
+                    ) : (
+                      <p className="text-sm font-medium text-foreground">{profile.timezone || "UTC"}</p>
+                    )}
+                  </div>
+                  <div>
+                    <Label className="mb-1 block text-xs text-muted-foreground">Language</Label>
+                    {editing ? (
+                      <select
+                        value={language}
+                        onChange={(e) => setLanguage(e.target.value)}
+                        className="w-full rounded-md border border-input bg-transparent px-3 py-1.5 text-sm shadow-xs outline-none focus-visible:ring-3 focus-visible:ring-ring/50"
+                      >
+                        {languages.length === 0 && <option value="en">English</option>}
+                        {languages.map((l) => (
+                          <option key={l.code} value={l.code}>{l.name}</option>
+                        ))}
+                      </select>
+                    ) : (
+                      <p className="text-sm font-medium text-foreground">{profile.language || "en"}</p>
+                    )}
+                  </div>
                 </div>
+
+                <div className="mt-6 border-t border-border pt-6">
+                  <h3 className="font-heading mb-4 text-sm font-semibold text-foreground">Company & Address</h3>
+                  <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                    <Field label="Company" editing={editing} value={company} onChange={setCompany} />
+                    <Field label="Phone" editing={editing} value={phone} onChange={setPhone} />
+                    <div className="sm:col-span-2">
+                      <Field label="Address Line 1" editing={editing} value={address1} onChange={setAddress1} />
+                    </div>
+                    <div className="sm:col-span-2">
+                      <Field label="Address Line 2" editing={editing} value={address2} onChange={setAddress2} />
+                    </div>
+                    <Field label="City" editing={editing} value={city} onChange={setCity} />
+                    <Field label="State / Province" editing={editing} value={state} onChange={setState} />
+                    <Field label="ZIP / Postal Code" editing={editing} value={zip} onChange={setZip} />
+                    <Field label="Country" editing={editing} value={country} onChange={setCountry} />
+                    <div className="sm:col-span-2">
+                      <Field label="Website" editing={editing} value={website} onChange={setWebsite} type="url" />
+                    </div>
+                  </div>
+                </div>
+
                 <div className="mt-6 flex gap-2 border-t border-border pt-6">
                   {editing ? (
                     <>

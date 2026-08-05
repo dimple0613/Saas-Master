@@ -1,6 +1,7 @@
 "use client";
 
 import { SuperAdminStats } from "@/components/dashboard/superadmin-stats";
+import { SubscriptionStats } from "@/components/dashboard/subscription-stats";
 import { SuperAdminChart } from "@/components/dashboard/superadmin-chart";
 import { SuperAdminAreaChart } from "@/components/dashboard/superadmin-area-chart";
 import { SuperAdminRecentActivity } from "@/components/dashboard/superadmin-recent";
@@ -18,6 +19,7 @@ export default function SuperAdminPage() {
         <OrgQuickActions />
       </div>
       <SuperAdminStats />
+      <SubscriptionStats />
       <div className="grid gap-4 lg:grid-cols-7">
         <div className="lg:col-span-4">
           <SuperAdminChart />
