@@ -152,7 +152,7 @@ function SignupContent() {
               </div>
               <div className="relative hidden md:block">
                 <img
-                  src="/auth-illustration.svg"
+                  src="/auth-signup-illustration.svg"
                   alt="SaaS Platform illustration"
                   className="h-full w-full object-cover"
                 />
@@ -296,7 +296,7 @@ function SignupContent() {
             {/* Right - Image Placeholder */}
             <div className="relative hidden md:block">
               <img
-                src="/auth-illustration.svg"
+                src="/auth-signup-illustration.svg"
                 alt="SaaS Platform illustration"
                 className="h-full w-full object-cover"
               />

@@ -187,7 +187,7 @@ function LoginContent() {
             {/* Right - Image Placeholder */}
             <div className="relative hidden md:block">
               <img
-                src="/auth-illustration.svg"
+                src="/auth-login-illustration.svg"
                 alt="SaaS Platform illustration"
                 className="h-full w-full object-cover"
               />
