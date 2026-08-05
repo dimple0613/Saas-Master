@@ -120,7 +120,7 @@ export default function ForgotPasswordPage() {
               <img
                 src="/auth-forgot-password-illustration.svg"
                 alt="SaaS Platform illustration"
-                className="relative h-full w-full object-cover"
+                className="relative h-full w-full object-contain"
               />
             </div>
           </div>

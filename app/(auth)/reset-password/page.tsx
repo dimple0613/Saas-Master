@@ -125,7 +125,7 @@ function ResetPasswordContent() {
               <img
                 src="/auth-reset-password-illustration.svg"
                 alt="SaaS Platform illustration"
-                className="relative h-full w-full object-cover"
+                className="relative h-full w-full object-contain"
               />
             </div>
           </div>
