@@ -156,7 +156,7 @@ function InviteContent() {
               <img
                 src="/auth-invite-illustration.svg"
                 alt="SaaS Platform illustration"
-                className="relative h-full w-full object-contain"
+                className="relative h-full w-full object-cover"
               />
             </div>
           </div>

@@ -190,7 +190,7 @@ function LoginContent() {
               <img
                 src="/auth-login-illustration.svg"
                 alt="SaaS Platform illustration"
-                className="relative h-full w-full object-contain"
+                className="relative h-full w-full object-cover"
               />
             </div>
           </div>
