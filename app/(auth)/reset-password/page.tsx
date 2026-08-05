@@ -120,11 +120,12 @@ function ResetPasswordContent() {
             </div>
 
             {/* Right - Image Placeholder */}
-            <div className="relative hidden md:block">
+            <div className="relative hidden overflow-hidden md:block">
+              <div className="absolute inset-0 bg-[linear-gradient(to_bottom_right,#000_0%,#171717_55%,#262626_100%)]" />
               <img
                 src="/auth-reset-password-illustration.svg"
                 alt="SaaS Platform illustration"
-                className="h-full w-full object-cover"
+                className="relative h-full w-full object-contain"
               />
             </div>
           </div>
