@@ -150,12 +150,11 @@ function SignupContent() {
                   Go to Login
                 </Button>
               </div>
-              <div className="relative hidden overflow-hidden md:block">
-                <div className="absolute inset-0 bg-[linear-gradient(to_bottom_right,#000_0%,#171717_55%,#262626_100%)]" />
+              <div className="relative hidden md:block">
                 <img
                   src="/auth-signup-illustration.svg"
                   alt="SaaS Platform illustration"
-                  className="relative h-full w-full object-cover"
+                  className="h-full w-full object-cover"
                 />
               </div>
             </div>
@@ -295,12 +294,11 @@ function SignupContent() {
             </div>
 
             {/* Right - Image Placeholder */}
-            <div className="relative hidden overflow-hidden md:block">
-              <div className="absolute inset-0 bg-[linear-gradient(to_bottom_right,#000_0%,#171717_55%,#262626_100%)]" />
+            <div className="relative hidden md:block">
               <img
                 src="/auth-signup-illustration.svg"
                 alt="SaaS Platform illustration"
-                className="relative h-full w-full object-cover"
+                className="h-full w-full object-cover"
               />
             </div>
           </div>

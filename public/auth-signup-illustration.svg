@@ -1,4 +1,4 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 800" preserveAspectRatio="xMidYMid slice">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 520" preserveAspectRatio="xMidYMid slice">
   <defs>
     <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
       <stop offset="0" stop-color="#000000"/>
@@ -13,64 +13,55 @@
       <feDropShadow dx="0" dy="10" stdDeviation="14" flood-color="#000000" flood-opacity="0.5"/>
     </filter>
     <radialGradient id="glow" cx="50%" cy="38%" r="58%">
-      <stop offset="0" stop-color="#ffffff" stop-opacity="0.12"/>
+      <stop offset="0" stop-color="#ffffff" stop-opacity="0.13"/>
       <stop offset="1" stop-color="#ffffff" stop-opacity="0"/>
     </radialGradient>
   </defs>
 
-  <rect width="400" height="800" fill="url(#bg)"/>
-  <rect width="400" height="800" fill="url(#glow)"/>
+  <rect width="400" height="520" fill="url(#bg)"/>
+  <rect width="400" height="520" fill="url(#glow)"/>
 
-  <circle cx="340" cy="90" r="150" fill="#ffffff" opacity="0.05"/>
-  <circle cx="60" cy="760" r="130" fill="#ffffff" opacity="0.04"/>
+  <circle cx="330" cy="64" r="140" fill="#ffffff" opacity="0.05"/>
+  <circle cx="56" cy="470" r="120" fill="#ffffff" opacity="0.04"/>
 
-  <g opacity="0.07" stroke="#ffffff" stroke-width="1">
-    <line x1="0" y1="160" x2="400" y2="160"/>
-    <line x1="0" y1="320" x2="400" y2="320"/>
-    <line x1="0" y1="480" x2="400" y2="480"/>
-    <line x1="0" y1="640" x2="400" y2="640"/>
-    <line x1="100" y1="0" x2="100" y2="800"/>
-    <line x1="200" y1="0" x2="200" y2="800"/>
-    <line x1="300" y1="0" x2="300" y2="800"/>
+  <g opacity="0.08" stroke="#ffffff" stroke-width="1">
+    <line x1="0" y1="130" x2="400" y2="130"/>
+    <line x1="0" y1="260" x2="400" y2="260"/>
+    <line x1="0" y1="390" x2="400" y2="390"/>
+    <line x1="100" y1="0" x2="100" y2="520"/>
+    <line x1="200" y1="0" x2="200" y2="520"/>
+    <line x1="300" y1="0" x2="300" y2="520"/>
   </g>
 
   <g filter="url(#shadow)">
-    <rect x="60" y="150" width="280" height="160" rx="16" fill="url(#card)"/>
-    <circle cx="200" cy="205" r="34" fill="#171717"/>
-    <circle cx="200" cy="193" r="12" fill="#ffffff"/>
-    <path d="M172 228c3-20 13-30 28-30s25 10 28 30" fill="#ffffff"/>
-    <rect x="130" y="258" width="140" height="9" rx="4.5" fill="#d4d4d4"/>
-    <rect x="162" y="274" width="76" height="6" rx="3" fill="#e5e5e5"/>
-    <rect x="152" y="294" width="96" height="20" rx="10" fill="#262626"/>
-    <rect x="172" y="301" width="56" height="5" rx="2.5" fill="#ffffff" opacity="0.85"/>
+    <rect x="52" y="96" width="296" height="200" rx="16" fill="url(#card)"/>
+    <circle cx="200" cy="152" r="38" fill="#171717"/>
+    <circle cx="200" cy="140" r="14" fill="#ffffff"/>
+    <path d="M170 178c3-22 14-32 30-32s27 10 30 32" fill="#ffffff"/>
+    <rect x="126" y="208" width="148" height="10" rx="5" fill="#d4d4d4"/>
+    <rect x="160" y="228" width="80" height="7" rx="3.5" fill="#e5e5e5"/>
+    <rect x="150" y="252" width="100" height="20" rx="10" fill="#262626"/>
+    <rect x="168" y="259" width="64" height="6" rx="3" fill="#ffffff" opacity="0.85"/>
   </g>
 
   <g filter="url(#shadow)">
-    <circle cx="322" cy="168" r="22" fill="#171717"/>
-    <path d="M312 168h20M322 158v20" stroke="#ffffff" stroke-width="3.5" fill="none" stroke-linecap="round"/>
+    <circle cx="322" cy="124" r="22" fill="#171717"/>
+    <path d="M312 124h20M322 114v20" stroke="#ffffff" stroke-width="3.5" fill="none" stroke-linecap="round"/>
   </g>
 
   <g filter="url(#shadow)">
-    <rect x="60" y="330" width="280" height="180" rx="16" fill="url(#card)"/>
-    <rect x="84" y="356" width="56" height="8" rx="4" fill="#a3a3a3"/>
-    <rect x="84" y="370" width="232" height="24" rx="7" fill="#e5e5e5"/>
-    <rect x="84" y="410" width="56" height="8" rx="4" fill="#a3a3a3"/>
-    <rect x="84" y="424" width="232" height="24" rx="7" fill="#e5e5e5"/>
-    <rect x="84" y="468" width="232" height="30" rx="8" fill="#171717"/>
-    <rect x="168" y="478" width="64" height="7" rx="3.5" fill="#ffffff" opacity="0.9"/>
+    <rect x="70" y="326" width="170" height="104" rx="14" fill="url(#card)"/>
+    <rect x="78" y="344" width="54" height="8" rx="4" fill="#a3a3a3"/>
+    <rect x="78" y="358" width="140" height="18" rx="6" fill="#e5e5e5"/>
+    <rect x="78" y="386" width="54" height="8" rx="4" fill="#a3a3a3"/>
+    <rect x="78" y="400" width="140" height="18" rx="6" fill="#e5e5e5"/>
   </g>
 
   <g filter="url(#shadow)">
-    <circle cx="320" cy="530" r="30" fill="#262626"/>
-    <path d="M308 530l8 8 16-18" stroke="#ffffff" stroke-width="4" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+    <circle cx="290" cy="368" r="26" fill="#262626"/>
+    <path d="M280 368l7 7 14-14" stroke="#ffffff" stroke-width="3.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
   </g>
 
-  <g filter="url(#shadow)">
-    <circle cx="104" cy="584" r="24" fill="#171717"/>
-    <circle cx="104" cy="574" r="8" fill="#ffffff"/>
-    <path d="M90 598c2-14 8-20 14-20s12 6 14 20" fill="#ffffff"/>
-  </g>
-
-  <text x="200" y="634" text-anchor="middle" font-family="Arial, sans-serif" font-size="24" font-weight="700" fill="#ffffff">Create your account</text>
-  <text x="200" y="658" text-anchor="middle" font-family="Arial, sans-serif" font-size="12.5" fill="#a3a3a3">Start building with your team</text>
+  <text x="200" y="470" text-anchor="middle" font-family="Arial, sans-serif" font-size="24" font-weight="700" fill="#ffffff">Create your account</text>
+  <text x="200" y="494" text-anchor="middle" font-family="Arial, sans-serif" font-size="12.5" fill="#a3a3a3">Start building with your team</text>
 </svg>
