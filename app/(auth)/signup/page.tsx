@@ -150,12 +150,12 @@ function SignupContent() {
                   Go to Login
                 </Button>
               </div>
-              <div className="hidden items-center justify-center bg-muted md:flex">
-                <div className="flex h-24 w-24 items-center justify-center rounded-full bg-muted-foreground/10">
-                  <svg className="h-10 w-10 text-muted-foreground/40" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 15.75l5.159-5.159a2.25 2.25 0 013.182 0l5.159 5.159m-1.5-1.5l1.409-1.409a2.25 2.25 0 013.182 0l2.909 2.909M3.75 21h16.5A2.25 2.25 0 0022.5 18.75V5.25A2.25 2.25 0 0020.25 3H3.75A2.25 2.25 0 001.5 5.25v13.5A2.25 2.25 0 003.75 21z" />
-                  </svg>
-                </div>
+              <div className="relative hidden md:block">
+                <img
+                  src="/auth-illustration.svg"
+                  alt="SaaS Platform illustration"
+                  className="h-full w-full object-cover"
+                />
               </div>
             </div>
           </div>
@@ -241,7 +241,12 @@ function SignupContent() {
                 {/* Confirm Password */}
                 <div className="space-y-2">
                   <Label htmlFor="confirmPassword" className="text-sm font-medium text-foreground">Confirm Password</Label>
-                  <Input id="confirmPassword" type={showPassword ? "text" : "password"} value={form.confirmPassword} onChange={(e) => update("confirmPassword", e.target.value)} placeholder="Confirm your password" required autoComplete="new-password" className="h-8 rounded-lg border-border bg-card px-3 text-sm placeholder:text-muted-foreground/50 focus-visible:ring-2 focus-visible:ring-foreground/10" />
+                  <div className="relative">
+                    <Input id="confirmPassword" type={showPassword ? "text" : "password"} value={form.confirmPassword} onChange={(e) => update("confirmPassword", e.target.value)} placeholder="Confirm your password" required autoComplete="new-password" className="h-8 rounded-lg border-border bg-card px-3 pr-9 text-sm placeholder:text-muted-foreground/50 focus-visible:ring-2 focus-visible:ring-foreground/10" />
+                    <Button type="button" variant="ghost" size="icon-sm" onClick={() => setShowPassword(!showPassword)} className="absolute right-1.5 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground" aria-label={showPassword ? "Hide password" : "Show password"}>
+                      {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                    </Button>
+                  </div>
                 </div>
 
                 {/* Error */}
@@ -264,13 +269,13 @@ function SignupContent() {
                     <span className="text-xs text-muted-foreground">Or continue with</span>
                     <div className="h-px flex-1 bg-border" />
                   </div>
-                  <div className="grid grid-cols-2 gap-3">
-                    <Button type="button" variant="outline" onClick={() => signIn("apple", { callbackUrl })} className="h-8">
+                  <div className="flex justify-center gap-3">
+                    <Button type="button" variant="outline" onClick={() => signIn("apple", { callbackUrl })} className="h-9 w-9 rounded-full" aria-label="Continue with Apple">
                       <svg className="h-5 w-5" viewBox="0 0 24 24" fill="currentColor">
                         <path d="M17.05 20.28c-.98.95-2.05.88-3.08.4-1.09-.5-2.08-.48-3.24 0-1.44.62-2.2.44-3.06-.4C2.79 15.25 3.51 7.59 9.05 7.31c1.35.07 2.29.74 3.08.8 1.18-.24 2.31-.93 3.57-.84 1.51.12 2.65.72 3.4 1.8-3.12 1.87-2.38 5.98.48 7.13-.57 1.5-1.31 2.98-2.54 4.09zM12.03 7.25c-.15-2.23 1.66-4.07 3.74-4.25.29 2.58-2.34 4.5-3.74 4.25z" />
                       </svg>
                     </Button>
-                    <Button type="button" variant="outline" onClick={() => signIn("google", { callbackUrl })} className="h-8">
+                    <Button type="button" variant="outline" onClick={() => signIn("google", { callbackUrl })} className="h-9 w-9 rounded-full" aria-label="Continue with Google">
                       <span className="text-lg font-bold">G</span>
                     </Button>
                   </div>
@@ -289,12 +294,12 @@ function SignupContent() {
             </div>
 
             {/* Right - Image Placeholder */}
-            <div className="hidden items-center justify-center bg-muted md:flex">
-              <div className="flex h-24 w-24 items-center justify-center rounded-full bg-muted-foreground/10">
-                <svg className="h-10 w-10 text-muted-foreground/40" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 15.75l5.159-5.159a2.25 2.25 0 013.182 0l5.159 5.159m-1.5-1.5l1.409-1.409a2.25 2.25 0 013.182 0l2.909 2.909M3.75 21h16.5A2.25 2.25 0 0022.5 18.75V5.25A2.25 2.25 0 0020.25 3H3.75A2.25 2.25 0 001.5 5.25v13.5A2.25 2.25 0 003.75 21z" />
-                </svg>
-              </div>
+            <div className="relative hidden md:block">
+              <img
+                src="/auth-illustration.svg"
+                alt="SaaS Platform illustration"
+                className="h-full w-full object-cover"
+              />
             </div>
           </div>
         </div>
