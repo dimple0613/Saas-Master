@@ -34,8 +34,8 @@ Auth.js v5 (`next-auth@5.0.0-beta.32`). Core wiring in `lib/auth.ts`, middleware
 
 ### Forgot / reset password
 
-- `/forgot-password` posts to `/api/auth/forgot-password` → generates `resetToken` (random bytes) + expiry, (email delivery is **not wired** — returns the reset link directly).
-- `/reset-password?token=...` posts to `/api/auth/reset-password` → validates token/expiry, updates the bcrypt hash.
+- `/forgot-password` posts to `/api/auth/forgot-password` → generates `resetToken` (random 32-byte hex, **stored as SHA-256 `reset_token`**) + expiry, (email delivery is **not wired** — returns the reset link directly).
+- `/reset-password?token=...` posts to `/api/auth/reset-password` → hashes the incoming token, validates token/expiry, updates the bcrypt hash.
 
 ### Invite flow
 
@@ -52,7 +52,7 @@ Auth.js v5 (`next-auth@5.0.0-beta.32`). Core wiring in `lib/auth.ts`, middleware
 
 | Path | Rule |
 |---|---|
-| `/login`, `/signup`, `/forgot-password`, `/reset-password`, `/invite` | Public |
+| `/login`, `/signup`, `/forgot-password`, `/reset-password`, `/invite`, `/terms`, `/privacy` | Public |
 | `/api/*` | Pass-through (handlers self-check) |
 | `/admin/*` | Requires `user.manage` permission (from JWT) |
 | `/app/*` | Authenticated (superadmins bounced to `/admin`) |
@@ -64,7 +64,7 @@ Auth.js v5 (`next-auth@5.0.0-beta.32`). Core wiring in `lib/auth.ts`, middleware
 ## Security Notes
 
 - Passwords: bcrypt (`bcryptjs`).
-- Reset tokens: random 32-byte hex.
+- Reset tokens: random 32-byte hex, stored as `sha256(token)`.
 - Invitation tokens: random 32-byte hex, stored as `sha256(token)` (`lib/tokens.ts`).
 - Session ids: random 64-byte hex, stored as `sha256(sid)`.
 

@@ -43,7 +43,7 @@
 - Password hashing helpers (bcrypt round-trip).
 - `lib/activity.ts` — `logActivity` writes correct rows; failure is swallowed.
 - Role/permission helper (`hasPermission`) once permission model lands.
-- Invitation token hashing helper (SHA-256) once implemented.
+- Invitation / reset-token hashing helper (`lib/tokens.ts` — SHA-256).
 - Seed idempotency.
 
 ### Integration tests (API)

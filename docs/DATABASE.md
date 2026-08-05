@@ -144,4 +144,4 @@ npx prisma generate
 npx prisma db seed
 ```
 
-> Local PostgreSQL is currently not running (no server/docker); the migration SQL is ready and will apply cleanly once a database is available.
+> Local PostgreSQL (`saas_project`) is set up — migrations applied and seed data loaded (superadmin/admin/user/member accounts, orgs, plans, activity logs).

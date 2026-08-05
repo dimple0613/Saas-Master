@@ -68,7 +68,7 @@ Singleton `PrismaClient` with `PrismaPg` adapter. Reused across route handlers t
   - enforces the system-admin gate from the JWT: `/admin/*` requires `user.manage`; superadmins are bounced off `/app/*`
   - allows `/api/*` and auth pages through
 - Session data: `user.id`, `user.role`, `user.permissions`, `user.sid` embedded in the JWT.
-- `lib/tokens.ts` exports `hashToken()` (SHA-256) used for invite tokens and session ids.
+- `lib/tokens.ts` exports `hashToken()` (SHA-256) used for invite tokens, password-reset tokens, and session ids.
 
 ### 3. Authorization (`lib/permissions.ts`)
 
@@ -118,7 +118,7 @@ Full reference in `docs/DATABASE.md`.
 ## Security Model
 
 - Passwords: bcrypt (`bcryptjs`), never stored in plaintext.
-- Invitation tokens and session ids: random bytes via `crypto.randomBytes`, stored as **SHA-256** hashes (`lib/tokens.ts`).
+- Invitation tokens, password-reset tokens, and session ids: random bytes via `crypto.randomBytes`, stored as **SHA-256** hashes (`lib/tokens.ts`).
 - CSRF: handled by Auth.js for its own endpoints; route handlers require a session.
 - SQL injection: prevented by Prisma parameterized queries.
 - Tenant isolation: enforced server-side in route handlers via `lib/permissions.ts` (non-active orgs denied).
