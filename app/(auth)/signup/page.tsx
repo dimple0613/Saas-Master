@@ -130,7 +130,7 @@ function SignupContent() {
       <div className="flex min-h-screen items-center justify-center bg-muted/50 px-4 py-[70px] max-sm:py-12">
         <div className="w-full max-w-[800px]">
           <div className="overflow-hidden rounded-2xl border border-border bg-card shadow-[0_2px_12px_rgba(0,0,0,0.06)]">
-            <div className="grid min-h-[520px] md:grid-cols-2">
+            <div className="grid min-h-[800px] md:grid-cols-2">
               <div className="flex flex-col items-center justify-center p-8">
                 <div className="mb-8 text-center">
                   <h1 className="font-heading text-2xl font-bold tracking-tight text-foreground">
@@ -168,7 +168,7 @@ function SignupContent() {
     <div className="flex min-h-screen items-center justify-center bg-muted/50 px-4 py-[70px] max-sm:py-12">
       <div className="w-full max-w-[800px]">
         <div className="overflow-hidden rounded-2xl border border-border bg-card shadow-[0_2px_12px_rgba(0,0,0,0.06)]">
-          <div className="grid min-h-[520px] md:grid-cols-2">
+          <div className="grid min-h-[800px] md:grid-cols-2">
             {/* Left - Form */}
             <div className="flex flex-col p-8">
               <div className="mb-6 text-center">
