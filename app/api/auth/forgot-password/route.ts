@@ -3,6 +3,7 @@ import crypto from "crypto";
 import { prisma } from "@/lib/prisma";
 import { sendMail } from "@/lib/mail";
 import { forgotPasswordTemplate } from "@/lib/mail-templates";
+import { hashToken } from "@/lib/tokens";
 
 export async function POST(req: NextRequest) {
   try {
@@ -19,7 +20,7 @@ export async function POST(req: NextRequest) {
 
     await prisma.user.update({
       where: { id: user.id },
-      data: { resetToken: token, resetTokenExpiry: expiry },
+      data: { resetToken: hashToken(token), resetTokenExpiry: expiry },
     });
 
     await sendMail({

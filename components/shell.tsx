@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback, useRef } from "react";
-import { usePathname, useRouter } from "next/navigation";
+import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { Sidebar } from "./sidebar";
 import { TopNav } from "./topnav";
@@ -9,19 +9,6 @@ import { OrgProvider, useOrg } from "@/lib/org-context";
 import { LanguageProvider } from "@/lib/language-context";
 import { CreateOrgModal } from "./create-org-modal";
 import { Plus, Settings } from "lucide-react";
-
-const routeLabels: Record<string, string> = {
-  "/admin": "Dashboard",
-  "/admin/users": "Users",
-  "/admin/accounts": "Accounts",
-  "/admin/profile": "Profile",
-  "/app": "Dashboard",
-  "/app/members": "Members",
-  "/app/organizations": "Organizations",
-  "/app/settings": "Settings",
-  "/app/notifications": "Notifications",
-  "/app/profile": "Profile",
-};
 
 interface Org { id: number; name: string; }
 
@@ -33,7 +20,6 @@ interface ShellProps {
 }
 
 export function Shell({ variant, children }: ShellProps) {
-  const pathname = usePathname();
   const [collapsed, setCollapsed] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
   const [isDesktop, setIsDesktop] = useState(false);
@@ -52,10 +38,6 @@ export function Shell({ variant, children }: ShellProps) {
   useEffect(() => {
     (window as Window & { openCreateOrg?: () => void }).openCreateOrg = openCreateOrg;
   }, [openCreateOrg]);
-
-  const breadcrumbs = [{
-    label: routeLabels[pathname] || (pathname.startsWith("/app/organizations/") ? "Organization Settings" : "Dashboard"),
-  }];
 
   return (
     <OrgProvider>
@@ -76,7 +58,6 @@ export function Shell({ variant, children }: ShellProps) {
         >
           <TopNav
             variant={variant}
-            breadcrumbs={breadcrumbs}
             onToggleCollapse={() => setCollapsed(!collapsed)}
             onToggleMobile={() => setMobileOpen(!mobileOpen)}
           />

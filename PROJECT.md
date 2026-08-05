@@ -226,7 +226,7 @@ Authorization is permission-based, not role-name-based. System permissions and t
 | Tenant management | ⚠️ | List/create/edit/view + status API (`/api/orgs/[id]/status`); suspend UI on Accounts page missing |
 | Tenant detail view (members, subscription, settings) | ⚠️ | Members + settings; subscription section missing |
 | Roles and permissions management | ⚠️ | `Permission`/`Role`/`RolePermission`/`UserRole` models + seed; no management UI |
-| Plans and plan feature management | ⚠️ | `Plan`/`PlanFeature` models + `POST /api/plans`; no management UI |
+| Plans and plan feature management | ✅ | `Plan`/`PlanFeature` models + `POST /api/plans` + `/admin/plans` management page |
 | Subscription overview across tenants | ✅ | `subscriptions` model + `GET/PATCH /api/subscriptions` + plan badges on Accounts page |
 | System settings | ❌ | `/settings` is tenant-scoped only |
 | Audit log viewer | ⚠️ | `/api/activity` + dashboard widgets; no full page |

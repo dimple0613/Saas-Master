@@ -4,7 +4,7 @@ import { prisma } from "@/lib/prisma";
 import { logActivity } from "@/lib/activity";
 import { getOrgMembership, hasTenantPermission } from "@/lib/permissions";
 
-const VALID_ROLES = ["owner", "admin", "member"];
+const VALID_ROLES = ["admin", "member"];
 
 export async function PUT(
   req: NextRequest,

@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
+import { getOrgMembership } from "@/lib/permissions";
 
 export async function GET(req: NextRequest) {
   const session = await auth();
@@ -12,6 +13,14 @@ export async function GET(req: NextRequest) {
   const orgId = orgIdParam ? parseInt(orgIdParam) : null;
 
   try {
+    // Non-superadmins may only view dashboards for orgs they belong to.
+    if (orgId && role !== "superadmin") {
+      const membership = await getOrgMembership(orgId, userId);
+      if (!membership) {
+        return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+      }
+    }
+
     if (role === "superadmin") {
       const totalOrgs = await prisma.organization.count();
       const totalUsers = await prisma.user.count();

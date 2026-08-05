@@ -9,6 +9,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { Alert, AlertDescription } from "@/components/ui/alert";
+import { safeCallbackUrl } from "@/lib/safe-redirect";
 
 function LoginContent() {
   const [email, setEmail] = useState("");
@@ -18,7 +19,7 @@ function LoginContent() {
   const [loading, setLoading] = useState(false);
   const router = useRouter();
   const searchParams = useSearchParams();
-  const callbackUrl = searchParams.get("callbackUrl") || "/";
+  const callbackUrl = safeCallbackUrl(searchParams.get("callbackUrl"));
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();

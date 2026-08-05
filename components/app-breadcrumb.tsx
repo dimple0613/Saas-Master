@@ -14,6 +14,7 @@ const routeLabels: Record<string, string> = {
   "/admin": "Platform Dashboard",
   "/admin/users": "Users",
   "/admin/accounts": "Accounts",
+  "/admin/plans": "Plans & Subscriptions",
   "/admin/profile": "Profile",
   "/app": "My Dashboard",
   "/app/members": "Members",

@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef, useCallback, useMemo } from "react";
 import { useRouter } from "next/navigation";
-import { Search, Home, Users, CreditCard, FileText, Settings, Shield, Globe, Palette, Languages, Activity, User, ArrowRight, X } from "lucide-react";
+import { Search, Home, Users, CreditCard, Settings, Globe, Activity, User, ArrowRight, X } from "lucide-react";
 import { Input } from "@/components/ui/input";
 
 interface SearchItem {
@@ -15,7 +15,8 @@ interface SearchItem {
 const ADMIN_ITEMS: SearchItem[] = [
   { label: "Dashboard", href: "/admin", icon: Home, keywords: ["dashboard", "home", "overview", "main"] },
   { label: "Users", href: "/admin/users", icon: Users, keywords: ["users", "members", "people", "accounts"] },
-  { label: "Accounts", href: "/admin/accounts", icon: CreditCard, keywords: ["accounts", "admin", "tenants", "subscriptions", "plans"] },
+  { label: "Accounts", href: "/admin/accounts", icon: CreditCard, keywords: ["accounts", "admin", "tenants", "subscriptions"] },
+  { label: "Plans", href: "/admin/plans", icon: CreditCard, keywords: ["plans", "subscriptions", "pricing", "billing"] },
   { label: "Profile", href: "/admin/profile", icon: User, keywords: ["profile", "account", "personal", "me"] },
 ];
 

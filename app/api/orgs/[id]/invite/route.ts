@@ -24,7 +24,7 @@ export async function POST(
 
   const { email, role } = await req.json();
   if (!email || !role) return NextResponse.json({ error: "Email and role are required" }, { status: 400 });
-  if (!["owner", "admin", "member"].includes(role)) return NextResponse.json({ error: "Invalid role" }, { status: 400 });
+  if (!["admin", "member"].includes(role)) return NextResponse.json({ error: "Invalid role" }, { status: 400 });
 
   try {
     const inviteUser = await prisma.user.findUnique({ where: { email } });

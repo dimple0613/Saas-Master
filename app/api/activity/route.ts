@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
+import { getOrgMembership } from "@/lib/permissions";
 import type { Prisma } from "@prisma/client";
 
 const CATEGORY_MAP: Record<string, string[]> = {
@@ -63,7 +64,18 @@ export async function GET(req: NextRequest) {
   let where: Prisma.ActivityLogWhereInput;
 
   if (orgId) {
-    where = { orgId: parseInt(orgId) };
+    const parsedOrgId = parseInt(orgId);
+    if (Number.isNaN(parsedOrgId)) {
+      return NextResponse.json({ error: "Invalid org_id" }, { status: 400 });
+    }
+    // Only superadmins or members of the org may read its activity logs.
+    if (session.user.role !== "superadmin") {
+      const membership = await getOrgMembership(parsedOrgId, userId);
+      if (!membership) {
+        return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+      }
+    }
+    where = { orgId: parsedOrgId };
   } else {
     const user = await prisma.user.findUnique({ where: { id: userId }, select: { role: true } });
 
@@ -86,7 +98,8 @@ export async function GET(req: NextRequest) {
     where = {
       OR: [
         { orgId: { in: orgIds } },
-        { orgId: null },
+        // Platform-wide activity (e.g. logins) is only visible to superadmins.
+        ...(user?.role === "superadmin" ? [{ orgId: null }] : []),
       ],
     };
   }

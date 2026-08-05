@@ -9,6 +9,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { Alert, AlertDescription } from "@/components/ui/alert";
+import { safeCallbackUrl } from "@/lib/safe-redirect";
 
 function SignupContent() {
   const searchParams = useSearchParams();
@@ -114,7 +115,7 @@ function SignupContent() {
     }
   }
 
-  const callbackUrl = searchParams.get("callbackUrl") || "/";
+  const callbackUrl = safeCallbackUrl(searchParams.get("callbackUrl"));
 
   if (inviteLoading) {
     return (

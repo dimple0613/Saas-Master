@@ -66,12 +66,11 @@ export function timeAgo(dateStr: string): string {
 
 interface TopNavProps {
   variant: "admin" | "tenant";
-  breadcrumbs: { label: string; href?: string }[];
   onToggleCollapse: () => void;
   onToggleMobile: () => void;
 }
 
-export function TopNav({ variant, breadcrumbs, onToggleCollapse, onToggleMobile }: TopNavProps) {
+export function TopNav({ variant, onToggleCollapse, onToggleMobile }: TopNavProps) {
   const { theme, setTheme } = useTheme();
   const { orgId } = useOrg();
   const { data: session } = useSession();
@@ -108,7 +107,7 @@ export function TopNav({ variant, breadcrumbs, onToggleCollapse, onToggleMobile 
       setError("Failed to load");
     }
     setLoading(false);
-  }, [orgId, session?.user?.role]);
+  }, [orgId, session]);
 
   useEffect(() => {
     if (open) fetchLogs();

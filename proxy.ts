@@ -1,7 +1,7 @@
 import { auth } from "@/lib/auth";
 import { NextResponse } from "next/server";
 
-const authRoutes = ["/login", "/signup", "/forgot-password", "/reset-password", "/invite"];
+const authRoutes = ["/login", "/signup", "/forgot-password", "/reset-password", "/invite", "/terms", "/privacy"];
 
 // System-scope routes guarded by permission keys embedded in the JWT.
 const guardedRoutes: { path: string; permission: string }[] = [

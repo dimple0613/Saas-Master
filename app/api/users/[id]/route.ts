@@ -22,15 +22,41 @@ export async function PUT(
   const { role, status } = await req.json();
   const targetId = parseInt(id);
 
+  // Fetch the actor's platform role to enforce the role-change hierarchy.
+  const actor = await prisma.user.findUnique({
+    where: { id: userId },
+    select: { role: true },
+  });
+  const isSuperadmin = actor?.role === "superadmin";
+
   const data: Record<string, string> = {};
   if (role) {
     if (!VALID_ROLES.includes(role)) return NextResponse.json({ error: "Invalid role" }, { status: 400 });
     if (targetId === userId) return NextResponse.json({ error: "Cannot change your own role" }, { status: 400 });
+
+    const target = await prisma.user.findUnique({ where: { id: targetId }, select: { role: true } });
+    if (!target) return NextResponse.json({ error: "User not found" }, { status: 404 });
+
+    // Only a superadmin may grant superadmin or touch existing admin/superadmin accounts.
+    if (!isSuperadmin) {
+      if (target.role === "superadmin" || target.role === "admin") {
+        return NextResponse.json({ error: "Only a superadmin can change roles of admins" }, { status: 403 });
+      }
+      if (role === "superadmin" || role === "admin") {
+        return NextResponse.json({ error: "Only a superadmin can assign admin roles" }, { status: 403 });
+      }
+    }
     data.role = role;
   }
   if (status) {
     if (!VALID_STATUSES.includes(status)) return NextResponse.json({ error: "Invalid status" }, { status: 400 });
     if (targetId === userId) return NextResponse.json({ error: "Cannot change your own status" }, { status: 400 });
+    if (!isSuperadmin) {
+      const target = await prisma.user.findUnique({ where: { id: targetId }, select: { role: true } });
+      if (target?.role === "superadmin") {
+        return NextResponse.json({ error: "Only a superadmin can change a superadmin's status" }, { status: 403 });
+      }
+    }
     data.status = status;
   }
   if (Object.keys(data).length === 0) {
