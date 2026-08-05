@@ -155,7 +155,7 @@ function SignupContent() {
                 <img
                   src="/auth-signup-illustration.svg"
                   alt="SaaS Platform illustration"
-                  className="relative h-full w-full object-contain"
+                  className="relative h-full w-full object-cover"
                 />
               </div>
             </div>
@@ -300,7 +300,7 @@ function SignupContent() {
               <img
                 src="/auth-signup-illustration.svg"
                 alt="SaaS Platform illustration"
-                className="relative h-full w-full object-contain"
+                className="relative h-full w-full object-cover"
               />
             </div>
           </div>
