@@ -18,6 +18,7 @@ import {
 } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
 import { ConfirmDialog } from "@/components/common/confirm-dialog";
+import { TablePagination } from "@/components/tables/table-pagination";
 
 interface User {
   id: number;
@@ -36,6 +37,8 @@ export default function UsersPage() {
   const [loading, setLoading] = useState(true);
   const [deleteTarget, setDeleteTarget] = useState<User | null>(null);
   const [deleting, setDeleting] = useState(false);
+  const [pageIndex, setPageIndex] = useState(0);
+  const [pageSize, setPageSize] = useState(10);
 
   useEffect(() => {
     let ignore = false;
@@ -95,6 +98,10 @@ export default function UsersPage() {
 
   if (loading) return <p className="text-sm text-muted-foreground">Loading...</p>;
 
+  const totalPages = Math.max(1, Math.ceil(users.length / pageSize));
+  const safePage = Math.min(pageIndex, totalPages - 1);
+  const pageItems = users.slice(safePage * pageSize, safePage * pageSize + pageSize);
+
   return (
     <div>
       <div className="mb-6">
@@ -120,7 +127,7 @@ export default function UsersPage() {
               </tr>
             </thead>
             <tbody>
-              {users.map((user) => (
+              {pageItems.map((user) => (
                 <tr key={user.id} className="border-b border-border last:border-0">
                   <td className="px-4 py-2.5">
                     <div className="flex items-center gap-3">
@@ -214,6 +221,13 @@ export default function UsersPage() {
               ))}
             </tbody>
           </table>
+          <TablePagination
+            pageIndex={safePage}
+            pageSize={pageSize}
+            total={users.length}
+            onPageIndexChange={setPageIndex}
+            onPageSizeChange={setPageSize}
+          />
         </div>
       )}
 

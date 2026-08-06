@@ -6,6 +6,7 @@ import { Bell } from "lucide-react";
 import { AppBreadcrumb } from "@/components/app-breadcrumb";
 import { Card, CardContent } from "@/components/ui/card";
 import { Select, SelectTrigger, SelectContent, SelectItem } from "@/components/ui/select";
+import { TablePagination } from "@/components/tables/table-pagination";
 
 interface Notification {
   id: number;
@@ -56,8 +57,11 @@ export default function NotificationsPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [filter, setFilter] = useState("all");
+  const [pageIndex, setPageIndex] = useState(0);
+  const [pageSize, setPageSize] = useState(10);
 
   async function load() {
+    setPageIndex(0);
     try {
       const res = await fetch(`/api/logs/notifications?action=${filter}&limit=100`);
       if (res.ok) {
@@ -76,12 +80,16 @@ export default function NotificationsPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [filter]);
 
+  const totalPages = Math.max(1, Math.ceil(logs.length / pageSize));
+  const safePage = Math.min(pageIndex, totalPages - 1);
+  const pageItems = logs.slice(safePage * pageSize, safePage * pageSize + pageSize);
+
   const grouped = useMemo(() => {
-    return logs.reduce<Record<string, Notification[]>>((acc, log) => {
+    return pageItems.reduce<Record<string, Notification[]>>((acc, log) => {
       (acc[log.action] = acc[log.action] || []).push(log);
       return acc;
     }, {});
-  }, [logs]);
+  }, [pageItems]);
 
   if (loading) return <p className="text-sm text-muted-foreground">Loading...</p>;
 
@@ -149,6 +157,16 @@ export default function NotificationsPage() {
             </div>
           ))}
         </div>
+      )}
+      {logs.length > pageSize && (
+        <TablePagination
+          className="mt-6"
+          pageIndex={safePage}
+          pageSize={pageSize}
+          total={logs.length}
+          onPageIndexChange={setPageIndex}
+          onPageSizeChange={setPageSize}
+        />
       )}
     </div>
   );

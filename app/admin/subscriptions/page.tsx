@@ -17,6 +17,7 @@ import {
   DropdownMenuSeparator,
 } from "@/components/ui/dropdown-menu";
 import { ConfirmDialog } from "@/components/common/confirm-dialog";
+import { TablePagination } from "@/components/tables/table-pagination";
 
 interface OrgBrief {
   id: number;
@@ -58,6 +59,8 @@ export default function SubscriptionsPage() {
   const [planFilter, setPlanFilter] = useState("all");
   const [recurringFilter, setRecurringFilter] = useState("all");
   const [now, setNow] = useState(0);
+  const [pageIndex, setPageIndex] = useState(0);
+  const [pageSize, setPageSize] = useState(10);
 
   const [terminateTarget, setTerminateTarget] = useState<Subscription | null>(null);
   const [busy, setBusy] = useState(false);
@@ -111,6 +114,10 @@ export default function SubscriptionsPage() {
       return true;
     });
   }, [items, tab, planFilter, recurringFilter, search]);
+
+  const totalPages = Math.max(1, Math.ceil(filtered.length / pageSize));
+  const safePage = Math.min(pageIndex, totalPages - 1);
+  const pageItems = filtered.slice(safePage * pageSize, safePage * pageSize + pageSize);
 
   function formatMoney(amount: number, currency: string) {
     try {
@@ -189,7 +196,7 @@ export default function SubscriptionsPage() {
         ))}
       </div>
 
-      <Tabs value={tab} onValueChange={(v) => setTab(String(v))} className="mb-4">
+      <Tabs value={tab} onValueChange={(v) => { setTab(String(v)); setPageIndex(0); }} className="mb-4">
         <TabsList>
           <TabsTrigger value="all">All</TabsTrigger>
           <TabsTrigger value="active">Active</TabsTrigger>
@@ -204,9 +211,9 @@ export default function SubscriptionsPage() {
           className="h-9 w-full sm:max-w-xs"
           placeholder="Search customer..."
           value={search}
-          onChange={(e) => setSearch(e.target.value)}
+          onChange={(e) => { setSearch(e.target.value); setPageIndex(0); }}
         />
-        <Select value={planFilter} onValueChange={(v) => setPlanFilter(String(v))}>
+        <Select value={planFilter} onValueChange={(v) => { setPlanFilter(String(v)); setPageIndex(0); }}>
           <SelectTrigger className="h-9 w-44 text-sm">
             <span>{planFilter === "all" ? "All Plans" : plans.find((p) => p.id === parseInt(planFilter))?.name || "All Plans"}</span>
           </SelectTrigger>
@@ -217,7 +224,7 @@ export default function SubscriptionsPage() {
             ))}
           </SelectContent>
         </Select>
-        <Select value={recurringFilter} onValueChange={(v) => setRecurringFilter(String(v))}>
+        <Select value={recurringFilter} onValueChange={(v) => { setRecurringFilter(String(v)); setPageIndex(0); }}>
           <SelectTrigger className="h-9 w-44 text-sm">
             <span>
               {recurringFilter === "all" ? "All Recurring" : recurringFilter === "on" ? "Recurring On" : "Recurring Off"}
@@ -248,7 +255,7 @@ export default function SubscriptionsPage() {
               </tr>
             </thead>
             <tbody>
-              {filtered.map((item) => (
+              {pageItems.map((item) => (
                 <tr key={item.id} className="border-b border-border last:border-0">
                   <td className="px-4 py-2.5">
                     <span className="font-medium text-foreground">{item.org.name}</span>
@@ -325,6 +332,13 @@ export default function SubscriptionsPage() {
               ))}
             </tbody>
           </table>
+          <TablePagination
+            pageIndex={safePage}
+            pageSize={pageSize}
+            total={filtered.length}
+            onPageIndexChange={setPageIndex}
+            onPageSizeChange={setPageSize}
+          />
         </div>
       )}
 

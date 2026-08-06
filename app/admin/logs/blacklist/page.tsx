@@ -10,6 +10,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { ConfirmDialog } from "@/components/common/confirm-dialog";
+import { TablePagination } from "@/components/tables/table-pagination";
 
 interface Entry {
   id: number;
@@ -26,6 +27,8 @@ export default function BlacklistPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [search, setSearch] = useState("");
+  const [pageIndex, setPageIndex] = useState(0);
+  const [pageSize, setPageSize] = useState(10);
 
   const [showForm, setShowForm] = useState(false);
   const [busy, setBusy] = useState(false);
@@ -55,6 +58,10 @@ export default function BlacklistPage() {
     if (!q) return items;
     return items.filter((i) => i.emailOrDomain.toLowerCase().includes(q) || (i.reason || "").toLowerCase().includes(q));
   }, [items, search]);
+
+  const totalPages = Math.max(1, Math.ceil(filtered.length / pageSize));
+  const safePage = Math.min(pageIndex, totalPages - 1);
+  const pageItems = filtered.slice(safePage * pageSize, safePage * pageSize + pageSize);
 
   const counts = useMemo(
     () => ({
@@ -145,7 +152,7 @@ export default function BlacklistPage() {
           className="h-9 w-full sm:max-w-xs"
           placeholder="Search blacklist..."
           value={search}
-          onChange={(e) => setSearch(e.target.value)}
+          onChange={(e) => { setSearch(e.target.value); setPageIndex(0); }}
         />
       </div>
 
@@ -163,7 +170,7 @@ export default function BlacklistPage() {
               </tr>
             </thead>
             <tbody>
-              {filtered.map((item) => (
+              {pageItems.map((item) => (
                 <tr key={item.id} className="border-b border-border last:border-0">
                   <td className="px-4 py-2.5">
                     <div className="flex items-center gap-3">
@@ -188,6 +195,13 @@ export default function BlacklistPage() {
               ))}
             </tbody>
           </table>
+          <TablePagination
+            pageIndex={safePage}
+            pageSize={pageSize}
+            total={filtered.length}
+            onPageIndexChange={setPageIndex}
+            onPageSizeChange={setPageSize}
+          />
         </div>
       )}
 

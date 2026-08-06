@@ -20,6 +20,7 @@ import {
   DropdownMenuSeparator,
 } from "@/components/ui/dropdown-menu";
 import { ConfirmDialog } from "@/components/common/confirm-dialog";
+import { TablePagination } from "@/components/tables/table-pagination";
 
 const TIMEZONES = [
   "(UTC-08:00) Pacific Time (US & Canada)",
@@ -72,6 +73,8 @@ export default function CustomersPage() {
   const [error, setError] = useState("");
   const [tab, setTab] = useState("all");
   const [search, setSearch] = useState("");
+  const [pageIndex, setPageIndex] = useState(0);
+  const [pageSize, setPageSize] = useState(10);
 
   const [showForm, setShowForm] = useState(false);
   const [editing, setEditing] = useState<Customer | null>(null);
@@ -114,6 +117,10 @@ export default function CustomersPage() {
       return true;
     });
   }, [items, tab, search]);
+
+  const totalPages = Math.max(1, Math.ceil(filtered.length / pageSize));
+  const safePage = Math.min(pageIndex, totalPages - 1);
+  const pageItems = filtered.slice(safePage * pageSize, safePage * pageSize + pageSize);
 
   const counts = useMemo(
     () => ({
@@ -271,9 +278,12 @@ export default function CustomersPage() {
           className="h-9 w-full sm:max-w-xs"
           placeholder="Search customers..."
           value={search}
-          onChange={(e) => setSearch(e.target.value)}
+          onChange={(e) => {
+            setSearch(e.target.value);
+            setPageIndex(0);
+          }}
         />
-        <Tabs value={tab} onValueChange={(v) => setTab(String(v))}>
+        <Tabs value={tab} onValueChange={(v) => { setTab(String(v)); setPageIndex(0); }}>
           <TabsList>
             <TabsTrigger value="all">All</TabsTrigger>
             <TabsTrigger value="active">Active</TabsTrigger>
@@ -298,7 +308,7 @@ export default function CustomersPage() {
               </tr>
             </thead>
             <tbody>
-              {filtered.map((item) => (
+              {pageItems.map((item) => (
                 <tr key={item.id} className="border-b border-border last:border-0">
                   <td className="px-4 py-2.5">
                     <div className="flex items-center gap-3">
@@ -387,6 +397,13 @@ export default function CustomersPage() {
               ))}
             </tbody>
           </table>
+          <TablePagination
+            pageIndex={safePage}
+            pageSize={pageSize}
+            total={filtered.length}
+            onPageIndexChange={setPageIndex}
+            onPageSizeChange={setPageSize}
+          />
         </div>
       )}
 

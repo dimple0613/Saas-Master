@@ -7,6 +7,7 @@ import { AppBreadcrumb } from "@/components/app-breadcrumb";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { TablePagination } from "@/components/tables/table-pagination";
 
 interface LogEntry {
   id: number;
@@ -28,8 +29,11 @@ export default function TrackingLogsPage() {
   const [error, setError] = useState("");
   const [tab, setTab] = useState("all");
   const [search, setSearch] = useState("");
+  const [pageIndex, setPageIndex] = useState(0);
+  const [pageSize, setPageSize] = useState(10);
 
   async function load() {
+    setPageIndex(0);
     try {
       const res = await fetch(`/api/logs/tracking?status=${tab}&search=${encodeURIComponent(search)}`);
       if (res.ok) {
@@ -50,6 +54,10 @@ export default function TrackingLogsPage() {
   }, [tab]);
 
   if (loading) return <p className="text-sm text-muted-foreground">Loading...</p>;
+
+  const totalPages = Math.max(1, Math.ceil(logs.length / pageSize));
+  const safePage = Math.min(pageIndex, totalPages - 1);
+  const pageItems = logs.slice(safePage * pageSize, safePage * pageSize + pageSize);
 
   const statItems = [
     { title: "Sent", value: counts.sent, icon: Mail },
@@ -136,7 +144,7 @@ export default function TrackingLogsPage() {
               </tr>
             </thead>
             <tbody>
-              {logs.map((item) => (
+              {pageItems.map((item) => (
                 <tr key={item.id} className="border-b border-border last:border-0">
                   <td className="px-4 py-2.5 font-medium text-foreground">{item.email}</td>
                   <td className="px-4 py-2.5 text-muted-foreground">{item.subject || "—"}</td>
@@ -171,6 +179,13 @@ export default function TrackingLogsPage() {
               ))}
             </tbody>
           </table>
+          <TablePagination
+            pageIndex={safePage}
+            pageSize={pageSize}
+            total={logs.length}
+            onPageIndexChange={setPageIndex}
+            onPageSizeChange={setPageSize}
+          />
         </div>
       )}
     </div>

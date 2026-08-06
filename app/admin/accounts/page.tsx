@@ -5,6 +5,7 @@ import { Building2, ChevronDown, ChevronRight } from "lucide-react";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { AppBreadcrumb } from "@/components/app-breadcrumb";
+import { TablePagination } from "@/components/tables/table-pagination";
 
 interface OrgAccount {
   id: number;
@@ -30,6 +31,8 @@ export default function AccountsPage() {
   const [groups, setGroups] = useState<OwnerGroup[]>([]);
   const [loading, setLoading] = useState(true);
   const [expandedOwner, setExpandedOwner] = useState<number | null>(null);
+  const [pageIndex, setPageIndex] = useState(0);
+  const [pageSize, setPageSize] = useState(10);
 
   useEffect(() => {
     fetch("/api/accounts")
@@ -53,6 +56,10 @@ export default function AccountsPage() {
 
   if (loading) return <p className="text-sm text-muted-foreground">Loading...</p>;
 
+  const totalPages = Math.max(1, Math.ceil(groups.length / pageSize));
+  const safePage = Math.min(pageIndex, totalPages - 1);
+  const pageItems = groups.slice(safePage * pageSize, safePage * pageSize + pageSize);
+
   return (
     <div>
       <div className="mb-6">
@@ -70,7 +77,7 @@ export default function AccountsPage() {
         </div>
       ) : (
         <div className="space-y-3">
-          {groups.map((group) => {
+          {pageItems.map((group) => {
             const isExpanded = expandedOwner === group.owner.id;
             const ownerName = [group.owner.first_name, group.owner.last_name].filter(Boolean).join(" ") || group.owner.email;
             return (
@@ -136,6 +143,16 @@ export default function AccountsPage() {
             );
           })}
         </div>
+      )}
+      {groups.length > pageSize && (
+        <TablePagination
+          className="mt-4"
+          pageIndex={safePage}
+          pageSize={pageSize}
+          total={groups.length}
+          onPageIndexChange={setPageIndex}
+          onPageSizeChange={setPageSize}
+        />
       )}
     </div>
   );
