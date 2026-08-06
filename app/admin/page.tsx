@@ -8,6 +8,7 @@ import { SuperAdminRecentActivity } from "@/components/dashboard/superadmin-rece
 import { RecentSubscriptions } from "@/components/dashboard/recent-subscriptions";
 import { TopCustomers } from "@/components/dashboard/top-customers";
 import { OrgQuickActions } from "@/components/dashboard/org-quick-actions";
+import { QuickLinks } from "@/components/dashboard/quick-links";
 import { AppBreadcrumb } from "@/components/app-breadcrumb";
 
 export default function SuperAdminPage() {
@@ -20,6 +21,7 @@ export default function SuperAdminPage() {
         </div>
         <OrgQuickActions />
       </div>
+      <QuickLinks />
       <SuperAdminStats />
       <SubscriptionStats />
       <div className="grid gap-4 lg:grid-cols-7">
