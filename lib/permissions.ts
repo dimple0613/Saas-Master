@@ -15,6 +15,14 @@ export const SYSTEM_PERMISSIONS = [
   { key: "audit.view", label: "View audit logs" },
   { key: "languages.manage", label: "Manage languages" },
   { key: "system.settings", label: "Manage system settings" },
+  { key: "subscription.manage", label: "Manage subscriptions" },
+  { key: "currency.manage", label: "Manage currencies" },
+  { key: "gateway.manage", label: "Manage payment gateways" },
+  { key: "credit.manage", label: "Manage credit packages" },
+  { key: "template.manage", label: "Manage email templates" },
+  { key: "admin.manage", label: "Manage admin accounts" },
+  { key: "impersonate", label: "Log in as another user" },
+  { key: "log.view", label: "View logs & monitor" },
 ] as const;
 
 // Tenant-scope permissions (Tenant dashboard)
@@ -63,7 +71,9 @@ export const DEFAULT_ROLES = [
       "tenant.view",
       "tenant.manage",
       "subscription.view",
+      "subscription.manage",
       "audit.view",
+      "log.view",
     ],
   },
   {

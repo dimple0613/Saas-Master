@@ -53,6 +53,35 @@ export async function GET(req: NextRequest) {
         include: { _count: { select: { subscriptions: true } } },
         orderBy: { priceMonthly: "asc" },
       });
+      const recentSubscriptions = await prisma.subscription.findMany({
+        take: 5,
+        orderBy: { createdAt: "desc" },
+        include: {
+          plan: { select: { name: true, priceMonthly: true, currency: true } },
+          org: {
+            select: {
+              name: true,
+              owner: { select: { firstName: true, lastName: true, email: true } },
+            },
+          },
+        },
+      });
+      const topCustomers = await prisma.organization.findMany({
+        where: { owner: { kind: "customer" } },
+        take: 5,
+        orderBy: { subscription: { subscribers: "desc" } },
+        include: {
+          owner: { select: { firstName: true, lastName: true, email: true } },
+          subscription: { select: { subscribers: true, status: true, plan: { select: { name: true } } } },
+        },
+      });
+      const memberGrowth = await prisma.$queryRawUnsafe<{ month: string; count: bigint }[]>(`
+        SELECT TO_CHAR(created_at, 'Mon') AS month, COUNT(*) AS count
+        FROM users
+        WHERE kind = 'customer' AND created_at >= NOW() - INTERVAL '12 months'
+        GROUP BY TO_CHAR(created_at, 'Mon'), DATE_TRUNC('month', created_at)
+        ORDER BY DATE_TRUNC('month', created_at)
+      `);
       return NextResponse.json({
         stats: { totalOrgs, totalUsers, totalRecords, activeNow: totalUsers },
         subscriptionStats: {
@@ -73,7 +102,26 @@ export async function GET(req: NextRequest) {
           isActive: p.isActive,
           subscribers: p._count.subscriptions,
         })),
+        recentSubscriptions: recentSubscriptions.map((s) => ({
+          id: s.id,
+          customer: `${s.org.owner.firstName || ""} ${s.org.owner.lastName || ""}`.trim() || s.org.owner.email || "Unknown",
+          org: s.org.name,
+          plan: s.plan.name,
+          amount: s.plan.priceMonthly.toString(),
+          currency: s.plan.currency,
+          status: s.status,
+          date: s.createdAt.toISOString(),
+        })),
+        topCustomers: topCustomers.map((o) => ({
+          name: `${o.owner.firstName || ""} ${o.owner.lastName || ""}`.trim() || o.owner.email,
+          email: o.owner.email,
+          org: o.name,
+          subscribers: o.subscription?.subscribers ?? 0,
+          status: o.subscription?.status ?? "none",
+          plan: o.subscription?.plan?.name ?? "—",
+        })),
         chartData: monthlyData.map((d) => ({ month: d.month, value: Number(d.count) })),
+        memberGrowth: memberGrowth.map((d) => ({ month: d.month, value: Number(d.count) })),
         recentActivity: recentActivity.map((a) => ({
           name: `${a.user.firstName || ""} ${a.user.lastName || ""}`.trim() || "Unknown",
           action: a.details || a.action,

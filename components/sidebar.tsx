@@ -3,7 +3,7 @@
 import { useSession } from "next-auth/react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Home, Building2, ChevronUp, Users, Bell, Settings, CreditCard, Shield } from "lucide-react";
+import { Home, Building2, ChevronUp, Users, Bell, Settings, CreditCard, Shield, LayoutDashboard, ShieldCheck, LayoutGrid, Coins, Wallet, Package, FileText, Languages, Send, Ban, BookOpen, User, UserCog } from "lucide-react";
 import { OrgSwitcher } from "./org-switcher";
 import type { ShellVariant } from "./shell";
 
@@ -148,15 +148,70 @@ function getNavItems(variant: ShellVariant) {
   if (variant === "admin") {
     return [
       {
-        key: "main",
-        label: "",
+        key: "overview",
+        label: "Overview",
         items: [
-          { label: "Dashboard", href: "/admin", icon: Home },
-          { label: "Users", href: "/admin/users", icon: Users },
+          { label: "Dashboard", href: "/admin", icon: LayoutDashboard },
+        ],
+      },
+      {
+        key: "customers",
+        label: "Customers",
+        items: [
+          { label: "Customers", href: "/admin/customers", icon: Users },
+          { label: "Users", href: "/admin/users", icon: UserCog },
+        ],
+      },
+      {
+        key: "billing",
+        label: "Billing",
+        items: [
+          { label: "Subscriptions", href: "/admin/subscriptions", icon: CreditCard },
+          { label: "Plans", href: "/admin/plans", icon: LayoutGrid },
+        ],
+      },
+      {
+        key: "management",
+        label: "Management",
+        items: [
           { label: "Accounts", href: "/admin/accounts", icon: Building2 },
-          { label: "Roles", href: "/admin/roles", icon: Shield },
-          { label: "Plans", href: "/admin/plans", icon: CreditCard },
+          { label: "Roles & Permissions", href: "/admin/roles", icon: Shield },
+        ],
+      },
+      {
+        key: "finance",
+        label: "Finance",
+        items: [
+          { label: "Currencies", href: "/admin/currencies", icon: Coins },
+          { label: "Payment Gateways", href: "/admin/gateways", icon: Wallet },
+          { label: "Credit Packages", href: "/admin/credit-packages", icon: Package },
+        ],
+      },
+      {
+        key: "platform",
+        label: "Platform",
+        items: [
+          { label: "Admins", href: "/admin/admins", icon: ShieldCheck },
+          { label: "Templates", href: "/admin/templates", icon: FileText },
+          { label: "Languages", href: "/admin/languages", icon: Languages },
           { label: "Settings", href: "/admin/settings", icon: Settings },
+        ],
+      },
+      {
+        key: "monitoring",
+        label: "Logs & Monitor",
+        items: [
+          { label: "Tracking Logs", href: "/admin/logs/tracking", icon: Send },
+          { label: "Blacklist", href: "/admin/logs/blacklist", icon: Ban },
+          { label: "Notifications", href: "/admin/logs/notifications", icon: Bell },
+          { label: "API Docs", href: "/admin/logs/api-docs", icon: BookOpen },
+        ],
+      },
+      {
+        key: "account",
+        label: "Account",
+        items: [
+          { label: "Profile", href: "/admin/profile", icon: User },
         ],
       },
     ];

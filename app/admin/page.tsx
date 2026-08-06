@@ -5,6 +5,8 @@ import { SubscriptionStats } from "@/components/dashboard/subscription-stats";
 import { SuperAdminChart } from "@/components/dashboard/superadmin-chart";
 import { SuperAdminAreaChart } from "@/components/dashboard/superadmin-area-chart";
 import { SuperAdminRecentActivity } from "@/components/dashboard/superadmin-recent";
+import { RecentSubscriptions } from "@/components/dashboard/recent-subscriptions";
+import { TopCustomers } from "@/components/dashboard/top-customers";
 import { OrgQuickActions } from "@/components/dashboard/org-quick-actions";
 import { AppBreadcrumb } from "@/components/app-breadcrumb";
 
@@ -26,6 +28,14 @@ export default function SuperAdminPage() {
         </div>
         <div className="lg:col-span-3">
           <SuperAdminRecentActivity />
+        </div>
+      </div>
+      <div className="grid gap-4 lg:grid-cols-7">
+        <div className="lg:col-span-4">
+          <RecentSubscriptions />
+        </div>
+        <div className="lg:col-span-3">
+          <TopCustomers />
         </div>
       </div>
       <SuperAdminAreaChart />

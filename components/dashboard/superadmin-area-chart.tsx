@@ -8,7 +8,7 @@ import { AreaChart, Area, XAxis, YAxis, CartesianGrid } from "recharts";
 
 const chartConfig = {
   value: {
-    label: "Activity",
+    label: "Customers",
     color: "var(--color-chart-1)",
   },
 } satisfies ChartConfig;
@@ -23,7 +23,7 @@ export function SuperAdminAreaChart() {
       const res = await fetch(`/api/dashboard?orgId=${orgId || ""}`);
       if (!res.ok || ignore) return;
       const d = await res.json();
-      setData(d.chartData || []);
+      setData(d.memberGrowth || []);
     })();
     return () => { ignore = true; };
   }, [orgId]);
@@ -32,8 +32,8 @@ export function SuperAdminAreaChart() {
     <Card>
       <CardHeader className="flex flex-row items-center justify-between pb-2">
         <div>
-          <CardTitle className="text-base">Platform Trend</CardTitle>
-          <p className="text-sm text-muted-foreground">Activity over time</p>
+          <CardTitle className="text-base">Customer Growth</CardTitle>
+          <p className="text-sm text-muted-foreground">New customers over time</p>
         </div>
       </CardHeader>
       <CardContent>

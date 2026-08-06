@@ -17,13 +17,19 @@ The `/admin/*` area includes:
 
 | Module | Route | What it does |
 |---|---|---|
-| Dashboard | `/admin` | Platform KPIs, activity chart/feed, and Plans & Subscriptions overview (total/active plans, subscribers, MRR, plan distribution) |
-| Users | `/admin/users` | Manage platform users (status, roles) |
+| Dashboard | `/admin` | Platform KPIs, activity chart/feed, Plans & Subscriptions overview (total/active plans, subscribers, MRR, plan distribution), Recent Subscriptions, Top Customers, and Customer Growth chart |
+| Customers | `/admin/customers` | Manage customer accounts (create, edit incl. password/timezone/language/company, enable/disable, delete) with one-click login |
+| Subscriptions | `/admin/subscriptions` | Subscription list with MRR/active/recurring/ending-soon cards, status tabs and filters; disable recurring or terminate |
 | Accounts | `/admin/accounts` | Manage tenant organizations and their plan badges |
 | Roles | `/admin/roles` | Create/edit/disable/delete roles and assign permissions grouped by scope (`system`/`tenant`) |
 | Plans | `/admin/plans` | Full plan CRUD (price, billing cycle, trial days, features) plus subscriptions table with change-plan control |
-| Settings | `/admin/settings` | Manage platform languages and key/value app settings |
-| Profile | `/admin/profile` | Own profile: contact info, company/address, timezone, language, security, notifications, sessions |
+| Finance | `/admin/currencies`, `/admin/gateways`, `/admin/credit-packages` | Currencies, payment gateways (JSON credential config), and credit packages |
+| Admins | `/admin/admins` | Staff accounts + admin groups; Login As (impersonation), edit, activate/deactivate |
+| Templates | `/admin/templates` | Email template CRUD |
+| Languages | `/admin/languages` | Add/edit/toggle/delete platform languages |
+| Settings | `/admin/settings` | General, Email, SMTP, Payment Gateways, PHP Settings, Cron Job, Security, and System tabs |
+| Logs & Monitor | `/admin/logs/tracking`, `/admin/logs/blacklist`, `/admin/logs/notifications`, `/admin/logs/api-docs` | Email tracking logs, blocked emails/domains, notification logs, and API endpoint reference |
+| Profile | `/admin/profile` | Own profile: photo, contact info, company/address, timezone, language, security (incl. API tokens), notifications, sessions |
 
 ---
 

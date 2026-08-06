@@ -1,5 +1,5 @@
 import "dotenv/config";
-import { PrismaClient, PlatformRole, OrgRole, SubscriptionStatus } from "@prisma/client";
+import { PrismaClient, PlatformRole, OrgRole, SubscriptionStatus, UserKind } from "@prisma/client";
 import { PrismaPg } from "@prisma/adapter-pg";
 import bcrypt from "bcryptjs";
 import { createHash } from "crypto";
@@ -36,6 +36,7 @@ async function main() {
       lastName: "Admin",
       orgName: "Platform",
       role: PlatformRole.superadmin,
+      kind: UserKind.admin,
     },
   });
 
@@ -49,6 +50,7 @@ async function main() {
       lastName: "Smith",
       orgName: "Acme Corp",
       role: PlatformRole.admin,
+      kind: UserKind.admin,
     },
   });
 
@@ -433,6 +435,114 @@ async function main() {
       where: { code: l.code },
       update: { name: l.name, region: l.region, isActive: true },
       create: { code: l.code, name: l.name, region: l.region, isActive: true },
+    });
+  }
+
+  // ── Admin groups (defaults) ──────────────────────────────
+  const defaultAdminGroups = [
+    { name: "Administrator", description: "Full platform administration group." },
+    { name: "Support", description: "Support staff with limited admin access." },
+  ];
+  for (const g of defaultAdminGroups) {
+    await prisma.adminGroup.upsert({
+      where: { name: g.name },
+      update: { description: g.description, isActive: true },
+      create: { name: g.name, description: g.description, isActive: true },
+    });
+  }
+
+  // ── Currencies (defaults — single currency: USD) ─────────
+  const defaultCurrencies = [
+    { name: "US Dollar", code: "USD", symbol: "$", format: "1,234.56" },
+  ];
+  for (const c of defaultCurrencies) {
+    await prisma.currency.upsert({
+      where: { code: c.code },
+      update: { name: c.name, symbol: c.symbol, format: c.format, isActive: true },
+      create: { name: c.name, code: c.code, symbol: c.symbol, format: c.format, isActive: true },
+    });
+  }
+
+  // ── Payment gateways (defaults) ──────────────────────────
+  const defaultGateways = [
+    { name: "Stripe", type: "stripe" },
+    { name: "PayPal", type: "paypal" },
+  ];
+  for (const g of defaultGateways) {
+    const existing = await prisma.paymentGateway.findFirst({ where: { name: g.name } });
+    if (existing) {
+      await prisma.paymentGateway.update({ where: { id: existing.id }, data: { type: g.type, isActive: true } });
+    } else {
+      await prisma.paymentGateway.create({ data: { ...g, isActive: true } });
+    }
+  }
+
+  // ── Credit packages (defaults) ───────────────────────────
+  const defaultCreditPackages = [
+    { name: "Starter Pack", description: "1,000 credits", credits: 1000, price: 10, currency: "USD", isVisible: true },
+    { name: "Growth Pack", description: "5,000 credits", credits: 5000, price: 40, currency: "USD", isVisible: true },
+    { name: "Scale Pack", description: "25,000 credits", credits: 25000, price: 150, currency: "USD", isVisible: true },
+  ];
+  for (const p of defaultCreditPackages) {
+    const existing = await prisma.creditPackage.findFirst({ where: { name: p.name } });
+    if (existing) {
+      await prisma.creditPackage.update({
+        where: { id: existing.id },
+        data: { description: p.description, credits: p.credits, price: p.price, currency: p.currency, isVisible: p.isVisible, isActive: true },
+      });
+    } else {
+      await prisma.creditPackage.create({ data: { ...p, isActive: true } });
+    }
+  }
+
+  // ── Email templates (defaults) ───────────────────────────
+  const defaultTemplates = [
+    {
+      name: "Welcome Email",
+      slug: "welcome",
+      category: "base",
+      html: "<p>Welcome! Thanks for signing up.</p>",
+    },
+    {
+      name: "Password Reset",
+      slug: "password-reset",
+      category: "base",
+      html: "<p>Click the link below to reset your password.</p>",
+    },
+    {
+      name: "Campaign Newsletter",
+      slug: "newsletter",
+      category: "extended",
+      html: "<p>Your monthly newsletter content here.</p>",
+    },
+  ];
+  for (const t of defaultTemplates) {
+    await prisma.emailTemplate.upsert({
+      where: { slug: t.slug },
+      update: { name: t.name, category: t.category, html: t.html, isActive: true },
+      create: { ...t, isActive: true },
+    });
+  }
+
+  // ── Tracking logs (sample) ───────────────────────────────
+  if ((await prisma.trackingLog.count()) === 0) {
+    await prisma.trackingLog.createMany({
+      data: [
+        { email: "alice@example.com", subject: "Welcome Email", status: "opened", openedAt: new Date() },
+        { email: "bob@example.com", subject: "Campaign Newsletter", status: "clicked", openedAt: new Date(), clickedAt: new Date() },
+        { email: "carol@example.com", subject: "Welcome Email", status: "bounced" },
+        { email: "dave@example.com", subject: "Password Reset", status: "sent" },
+      ],
+    });
+  }
+
+  // ── Blacklist (sample) ───────────────────────────────────
+  if ((await prisma.blacklist.count()) === 0) {
+    await prisma.blacklist.createMany({
+      data: [
+        { emailOrDomain: "spam@example.com", reason: "Reported spam" },
+        { emailOrDomain: "bounce.example.com", reason: "Hard bounce domain" },
+      ],
     });
   }
 

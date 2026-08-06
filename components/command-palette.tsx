@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef, useCallback, useMemo } from "react";
 import { useRouter } from "next/navigation";
-import { Search, Home, Users, CreditCard, Shield, Settings, Globe, Activity, User, ArrowRight, X } from "lucide-react";
+import { Search, Home, Users, CreditCard, Shield, Settings, Globe, Activity, User, ArrowRight, X, LayoutDashboard, UserCog, Building2, LayoutGrid, Coins, Wallet, Package, ShieldCheck, FileText, Languages, Send, Ban, BookOpen } from "lucide-react";
 import { Input } from "@/components/ui/input";
 
 interface SearchItem {
@@ -13,13 +13,25 @@ interface SearchItem {
 }
 
 const ADMIN_ITEMS: SearchItem[] = [
-  { label: "Dashboard", href: "/admin", icon: Home, keywords: ["dashboard", "home", "overview", "main"] },
-  { label: "Users", href: "/admin/users", icon: Users, keywords: ["users", "members", "people", "accounts"] },
-  { label: "Accounts", href: "/admin/accounts", icon: CreditCard, keywords: ["accounts", "admin", "tenants", "subscriptions"] },
-  { label: "Roles", href: "/admin/roles", icon: Shield, keywords: ["roles", "permissions", "rbac", "access"] },
-  { label: "Plans", href: "/admin/plans", icon: CreditCard, keywords: ["plans", "subscriptions", "pricing", "billing"] },
-  { label: "Settings", href: "/admin/settings", icon: Settings, keywords: ["settings", "languages", "configuration", "admin"] },
-  { label: "Profile", href: "/admin/profile", icon: User, keywords: ["profile", "account", "personal", "me"] },
+  { label: "Dashboard", href: "/admin", icon: LayoutDashboard, keywords: ["dashboard", "home", "overview", "main"] },
+  { label: "Customers", href: "/admin/customers", icon: Users, keywords: ["customers", "clients", "accounts", "tenants"] },
+  { label: "Users", href: "/admin/users", icon: UserCog, keywords: ["users", "members", "people"] },
+  { label: "Subscriptions", href: "/admin/subscriptions", icon: CreditCard, keywords: ["subscriptions", "billing", "recurring", "trials"] },
+  { label: "Plans", href: "/admin/plans", icon: LayoutGrid, keywords: ["plans", "pricing", "packages"] },
+  { label: "Accounts", href: "/admin/accounts", icon: Building2, keywords: ["accounts", "organizations", "tenants", "orgs"] },
+  { label: "Roles & Permissions", href: "/admin/roles", icon: Shield, keywords: ["roles", "permissions", "rbac", "access"] },
+  { label: "Currencies", href: "/admin/currencies", icon: Coins, keywords: ["currencies", "currency", "money", "exchange"] },
+  { label: "Payment Gateways", href: "/admin/gateways", icon: Wallet, keywords: ["gateways", "payments", "stripe", "paypal", "checkout"] },
+  { label: "Credit Packages", href: "/admin/credit-packages", icon: Package, keywords: ["credit", "packages", "packs", "topups"] },
+  { label: "Admins", href: "/admin/admins", icon: ShieldCheck, keywords: ["admins", "staff", "team", "admin groups"] },
+  { label: "Templates", href: "/admin/templates", icon: FileText, keywords: ["templates", "emails", "campaigns", "layout"] },
+  { label: "Languages", href: "/admin/languages", icon: Languages, keywords: ["languages", "locale", "translation", "i18n"] },
+  { label: "Settings", href: "/admin/settings", icon: Settings, keywords: ["settings", "configuration", "smtp", "php", "cron", "captcha", "license"] },
+  { label: "Tracking Logs", href: "/admin/logs/tracking", icon: Send, keywords: ["logs", "tracking", "emails", "delivery", "open", "click"] },
+  { label: "Blacklist", href: "/admin/logs/blacklist", icon: Ban, keywords: ["blacklist", "block", "spam", "blocked"] },
+  { label: "Notifications Logs", href: "/admin/logs/notifications", icon: Activity, keywords: ["notifications", "alerts", "history", "logs"] },
+  { label: "API Docs", href: "/admin/logs/api-docs", icon: BookOpen, keywords: ["api", "docs", "endpoints", "reference", "integration"] },
+  { label: "Profile", href: "/admin/profile", icon: User, keywords: ["profile", "account", "personal", "me", "password", "token"] },
 ];
 
 const TENANT_ITEMS: SearchItem[] = [

@@ -24,6 +24,11 @@ enum UserStatus {
   suspended
 }
 
+enum UserKind {
+  customer
+  admin
+}
+
 enum OrgStatus {
   active
   inactive
@@ -36,6 +41,14 @@ enum SubscriptionStatus {
   past_due
   canceled
   expired
+  pending
+}
+
+enum EmailTrackingStatus {
+  sent
+  opened
+  clicked
+  bounced
 }
 
 model User {
@@ -46,6 +59,7 @@ model User {
   lastName           String?       @map("last_name")
   orgName            String?       @map("org_name")
   role               PlatformRole  @default(user)
+  kind               UserKind      @default(customer)
   status             UserStatus    @default(active)
   emailVerified      DateTime?     @map("email_verified")
   image              String?
@@ -57,6 +71,9 @@ model User {
   timezone           String?       @default("UTC")
   language           String?       @default("en")
   company            String?
+  companyFirstName   String?       @map("company_first_name")
+  companyLastName    String?       @map("company_last_name")
+  companyEmail       String?       @map("company_email")
   phone              String?
   address1           String?       @map("address1")
   address2           String?       @map("address2")
@@ -66,8 +83,10 @@ model User {
   country            String?
   website            String?
   apiTokenHash       String?       @map("api_token_hash")
+  adminGroupId       Int?          @map("admin_group_id")
   createdAt          DateTime      @default(now()) @map("created_at")
 
+  adminGroup     AdminGroup?       @relation(fields: [adminGroupId], references: [id])
   ownedOrgs      Organization[]    @relation("OrgOwner")
   orgMemberships OrgMember[]
   invitedMembers OrgMember[]       @relation("InvitedBy")
@@ -79,6 +98,7 @@ model User {
   activeSessions ActiveSession[]
   userRoles      UserRole[]
 
+  @@index([adminGroupId])
   @@map("users")
 }
 
@@ -251,6 +271,8 @@ model Role {
   isActive    Boolean          @default(true) @map("is_active")
   permissions RolePermission[]
   users       UserRole[]
+  createdAt   DateTime         @default(now()) @map("created_at")
+  updatedAt   DateTime         @default(now()) @updatedAt @map("updated_at")
 
   @@unique([scope, name])
   @@map("roles")
@@ -315,6 +337,9 @@ model Subscription {
   orgId     Int                @unique @map("org_id")
   planId    Int                @map("plan_id")
   status    SubscriptionStatus @default(active)
+  autoRenew Boolean            @default(true) @map("auto_renew")
+  credits   Int                @default(0)
+  subscribers Int              @default(0)
   startsAt  DateTime           @default(now()) @map("starts_at")
   endsAt    DateTime?          @map("ends_at")
   createdAt DateTime           @default(now()) @map("created_at")
@@ -350,4 +375,107 @@ model Language {
   updatedAt DateTime @updatedAt @map("updated_at")
 
   @@map("languages")
+}
+
+// ── Admin groups (admin module) ───────────────────────────────
+
+model AdminGroup {
+  id          Int      @id @default(autoincrement())
+  name        String   @unique
+  description String?
+  isActive    Boolean  @default(true) @map("is_active")
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  users User[]
+
+  @@map("admin_groups")
+}
+
+// ── Currencies (finance) ──────────────────────────────────────
+
+model Currency {
+  id        Int      @id @default(autoincrement())
+  name      String
+  code      String   @unique
+  symbol    String?
+  format    String?
+  isActive  Boolean  @default(true) @map("is_active")
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@map("currencies")
+}
+
+// ── Payment gateways (finance) ────────────────────────────────
+
+model PaymentGateway {
+  id        Int      @id @default(autoincrement())
+  name      String
+  type      String   // stripe | paypal | paddle | etc.
+  config    Json?
+  isActive  Boolean  @default(true) @map("is_active")
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@map("payment_gateways")
+}
+
+// ── Credit packages (finance) ─────────────────────────────────
+
+model CreditPackage {
+  id          Int            @id @default(autoincrement())
+  name        String
+  description String?
+  credits     Int            @default(0)
+  price       Decimal        @default(0) @db.Decimal(10, 2)
+  currency    String         @default("USD")
+  isVisible   Boolean        @default(true) @map("is_visible")
+  isActive    Boolean        @default(true) @map("is_active")
+  createdAt   DateTime       @default(now()) @map("created_at")
+  updatedAt   DateTime       @updatedAt @map("updated_at")
+
+  @@map("credit_packages")
+}
+
+// ── Email templates (administration) ──────────────────────────
+
+model EmailTemplate {
+  id          Int      @id @default(autoincrement())
+  name        String
+  slug        String   @unique
+  category    String   @default("base") // base | extended
+  html        String?
+  builderJson Json?
+  isActive    Boolean  @default(true) @map("is_active")
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  @@map("email_templates")
+}
+
+// ── Email tracking logs (logs & monitor) ──────────────────────
+
+model TrackingLog {
+  id        Int                 @id @default(autoincrement())
+  email     String
+  subject   String?
+  status    EmailTrackingStatus @default(sent)
+  openedAt  DateTime?           @map("opened_at")
+  clickedAt DateTime?           @map("clicked_at")
+  createdAt DateTime            @default(now()) @map("created_at")
+
+  @@index([email])
+  @@map("tracking_logs")
+}
+
+// ── Email blacklist (logs & monitor) ──────────────────────────
+
+model Blacklist {
+  id           Int      @id @default(autoincrement())
+  emailOrDomain String   @unique @map("email_or_domain")
+  reason       String?
+  createdAt    DateTime @default(now()) @map("created_at")
+
+  @@map("blacklist")
 }

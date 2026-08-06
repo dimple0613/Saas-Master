@@ -16,7 +16,7 @@ export async function GET() {
     const subscriptions = await prisma.subscription.findMany({
       include: {
         org: { select: { id: true, name: true, status: true } },
-        plan: { select: { id: true, name: true, slug: true, priceMonthly: true } },
+        plan: { select: { id: true, name: true, slug: true, priceMonthly: true, billingCycle: true, currency: true } },
       },
       orderBy: { createdAt: "desc" },
     });
@@ -24,8 +24,17 @@ export async function GET() {
       subscriptions: subscriptions.map((s) => ({
         id: s.id,
         org: s.org,
-        plan: { id: s.plan.id, name: s.plan.name, slug: s.plan.slug, priceMonthly: s.plan.priceMonthly.toString() },
+        plan: {
+          id: s.plan.id,
+          name: s.plan.name,
+          slug: s.plan.slug,
+          priceMonthly: Number(s.plan.priceMonthly),
+          billingCycle: s.plan.billingCycle,
+          currency: s.plan.currency,
+        },
         status: s.status,
+        autoRenew: s.autoRenew,
+        credits: s.credits,
         startsAt: s.startsAt.toISOString(),
         endsAt: s.endsAt?.toISOString() || null,
       })),

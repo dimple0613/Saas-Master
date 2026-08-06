@@ -11,12 +11,12 @@ Enums: `PlatformRole` (`superadmin`, `admin`, `user`) on `User`. Roles table row
 | PlatformRole | Role row | Permissions |
 |---|---|---|
 | `superadmin` | `super_admin` | All system permissions |
-| `admin` | `admin` | `dashboard.view`, `user.manage`, `user.role_change`, `tenant.view`, `tenant.manage`, `subscription.view`, `audit.view` |
+| `admin` | `admin` | `dashboard.view`, `user.manage`, `user.role_change`, `tenant.view`, `tenant.manage`, `subscription.view`, `subscription.manage`, `audit.view`, `log.view` |
 | `user` | `user` | `dashboard.view` |
 
 System permissions (`Permission` where `scope = "system"`):
 
-`dashboard.view`, `user.manage`, `user.role_change`, `tenant.manage`, `tenant.view`, `plan.manage`, `subscription.view`, `roles.manage`, `audit.view`, `languages.manage`, `system.settings`
+`dashboard.view`, `user.manage`, `user.role_change`, `tenant.manage`, `tenant.view`, `plan.manage`, `subscription.view`, `subscription.manage`, `roles.manage`, `audit.view`, `languages.manage`, `system.settings`, `currency.manage`, `gateway.manage`, `credit.manage`, `template.manage`, `admin.manage`, `impersonate`, `log.view`
 
 > PROJECT.md lists `super_admin` and `admin`. The enum uses `superadmin`; the `roles` table uses `super_admin`. Extra `user` role retained for non-admin platform users.
 
@@ -52,6 +52,10 @@ Tenant permissions (`Permission` where `scope = "tenant"`):
 | Permission-based checks | ✅ system + tenant API guards, JWT-based middleware |
 | System vs tenant scope separation | ✅ `scope` column on `Permission`/`Role` |
 | Roles & permissions management UI | ✅ `/admin/roles` (list, create, edit permissions, disable, delete) + `/api/roles`, `/api/roles/[id]`, `/api/permissions` |
+| Admin accounts module | ✅ `/admin/admins` + `/api/admins`, `/api/admin-groups` (`admin.manage`); `User.kind` separates staff from customers |
+| Impersonation / Login As | ✅ `/api/admin/impersonate` (`impersonate`, superadmin-only) — signed JWT + `ActiveSession` swap |
+| Finance modules | ✅ Currencies / Payment Gateways / Credit Packages (`currency.manage` / `gateway.manage` / `credit.manage`) |
+| Templates + Logs & Monitor | ✅ `/admin/templates` (`template.manage`); tracking / blacklist / notifications logs (`log.view`) |
 | Extra `UserRole` assignment UI | ❌ Not present (model exists, used by `hasSystemPermission`) |
 
 ## Planned

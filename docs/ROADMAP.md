@@ -31,16 +31,28 @@ Planned work to bring the codebase in line with `PROJECT.md`. Ordered by depende
 
 ## Phase 4b — Admin modules (Phases 1–3 scope)
 
-- ✅ **Dashboard extension** — superadmin dashboard now shows Plans & Subscriptions cards (total/active plans, active subscribers, MRR) and a plan-distribution panel (`SubscriptionStats`), backed by the extended `/api/dashboard`.
-- ✅ **Profile extensions** — `/api/profile` GET/PUT returns/updates timezone, language, company, phone, address, city, state, zip, country, website; profile UI gained an editable "Company & Address" section and a language picker sourced from active DB languages.
+- ✅ **Dashboard extension** — superadmin dashboard now shows Plans & Subscriptions cards (total/active plans, active subscribers, MRR), a plan-distribution panel (`SubscriptionStats`), Recent Subscriptions, Top Customers, and a Customer Growth area chart — backed by the extended `/api/dashboard`.
+- ✅ **Profile extensions** — `/api/profile` GET/PUT returns/updates timezone, language, company + company contact, photo URL, phone, address, city, state, zip, country, website; profile UI gained an editable "Company & Address" section, a photo field, and a language picker sourced from active DB languages.
 - ✅ **Settings (system)** — `/admin/settings` with a Languages tab (add/edit/toggle/delete via `/api/languages` + `/api/languages/[id]`, gated by `languages.manage`) and a System Settings tab (key/value editor via `/api/settings`, gated by `system.settings`).
+
+## Phase 4c — Admin modules (billing, customers, admins, templates, logs & monitor)
+
+- ✅ **Finance** — Currencies, Payment Gateways (JSON config for keys/credentials), and Credit Packages modules with full CRUD (`/api/currencies`, `/api/gateways`, `/api/credit-packages` + `[id]`), gated by `currency.manage` / `gateway.manage` / `credit.manage`. Legacy/PHP-only fields (gateway credentials) are stored as `PaymentGateway.config`.
+- ✅ **Subscriptions management** — `/admin/subscriptions` with MRR/Active/Auto-renewing/Ending-soon cards, status tabs, plan/recurring/search filters, and per-subscription actions (disable recurring, terminate) via `PATCH /api/subscriptions/[id]` (`subscription.manage`).
+- ✅ **Admins module** — `User.kind` (`customer`/`admin`) split; `/admin/admins` with staff accounts + admin groups CRUD (`/api/admins`, `/api/admin-groups`), gated by `admin.manage`. Soft-delete converts an admin to an inactive customer.
+- ✅ **One-Click Login / Login As** — `/api/admin/impersonate` (superadmin-only, `impersonate` permission) creates an `ActiveSession` + signed Auth.js JWT and swaps the session cookie; redirects to `/admin` for admins, `/app` for customers.
+- ✅ **Customers module** — `/admin/customers` with Total/Active/Subscribed/Inactive cards, search + status tabs, login-as, edit (incl. password/timezone/language/company), enable/disable/delete (`/api/customers` + `[id]`).
+- ✅ **Templates module** — `/admin/templates` with CRUD for email templates (`/api/templates` + `[id]`, `template.manage`).
+- ✅ **Logs & Monitor** — `/admin/logs/tracking` (email tracking with status counts), `/admin/logs/blacklist` (block emails/domains), `/admin/logs/notifications`, and `/admin/logs/api-docs` (endpoint reference) — all gated by `log.view`.
+- ✅ **API tokens** — `GET/POST/DELETE /api/profile/api-token`; token returned once, stored as SHA-256 hash (`User.apiTokenHash`).
+- ✅ **Navigation restructure** — sidebar, breadcrumb, and command palette regrouped into Dashboard / Customers / Billing / Management / Finance / Platform / Logs & Monitor / Account.
 
 ## Phase 5 — Sessions, email & audit
 
 - ✅ **14. Session management** — `ActiveSession` model, `/api/sessions` (list/revoke), Profile → Sessions tab; JWT re-validates on every request.
 - ❌ **15. Email verification flow** — `emailVerified` column exists; verify route/flow pending.
 - ❌ **16. Email delivery** for forgot-password and invites (choose service — decision required).
-- ⚠️ **17. Full audit log viewer page** — `/api/activity` + dashboard widgets exist; full page pending.
+- ⚠️ **17. Full audit log viewer page** — `/api/activity` + dashboard widgets exist; Logs & Monitor now covers email tracking, blacklist, and notification logs; a general activity-log page is still pending.
 
 ## Phase 6 — Route structure
 
@@ -63,4 +75,4 @@ Planned work to bring the codebase in line with `PROJECT.md`. Ordered by depende
 
 1. Apply migration + seed against a running PostgreSQL (`npx prisma migrate deploy && npx prisma db seed`), then boot `npm run dev` and verify OAuth + sessions end-to-end.
 2. Add real Google/Apple OAuth credentials to `.env` (see `docs/AUTH_FLOW.md`).
-3. Continue with remaining tenant-side items (tenant roles & permissions view, tenant billing/subscription view) and Phase 5–8 items (email verification, audit log page, tests, deployment).
+3. Continue with remaining tenant-side items (tenant roles & permissions view, tenant billing/subscription view) and Phase 5–8 items (email verification, general audit log page, tests, deployment).

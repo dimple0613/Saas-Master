@@ -4,17 +4,19 @@
 
 - ORM: **Prisma 7** (`prisma/schema.prisma`) with `@prisma/adapter-pg`.
 - Database: PostgreSQL (local dev; Neon planned for production).
-- Migrations: `prisma/migrations/` — latest: `20260805000000_oauth_roles_plans`.
-- Seeding: `prisma/seed.ts` (creates `superadmin@example.com`, `admin@example.com`, `user@example.com`, `member@example.com` with password `password123`; seeds permissions/roles, plans, subscriptions, orgs, members, profile data, activity logs).
+- Migrations: `prisma/migrations/` — latest applied set includes admin groups, currencies, gateways, credit packages, email templates, tracking logs, and blacklist.
+- Seeding: `prisma/seed.ts` (creates `superadmin@example.com`, `admin@example.com`, `user@example.com`, `member@example.com` with password `password123`; seeds permissions/roles, plans, subscriptions, orgs, members, profile data, activity logs, admin groups, currency, gateways, credit packages, email templates, tracking logs, blacklist).
 
 ## Enums
 
 ```prisma
 enum PlatformRole { superadmin admin user }
-enum OrgRole { owner admin member }
+enum UserKind { customer admin }
 enum UserStatus { active inactive suspended }
+enum OrgRole { owner admin member }
 enum OrgStatus { active inactive suspended }
-enum SubscriptionStatus { active trialing past_due canceled expired }
+enum SubscriptionStatus { active trialing past_due canceled expired pending }
+enum EmailTrackingStatus { sent opened clicked bounced }
 ```
 
 ## Models
@@ -29,6 +31,7 @@ enum SubscriptionStatus { active trialing past_due canceled expired }
 | `firstName` / `lastName` | String? | `first_name` / `last_name` (mapped from Auth.js `name`) |
 | `orgName` | String? | `org_name` — display org string |
 | `role` | `PlatformRole` (default `user`) | `superadmin` / `admin` / `user` |
+| `kind` | `UserKind` (default `customer`) | `customer` / `admin` — separates tenant customers from staff accounts |
 | `status` | `UserStatus` (default `active`) | credentials + sessions blocked unless active |
 | `emailVerified` | DateTime? | `email_verified` |
 | `image` | String? | OAuth avatar |
@@ -37,14 +40,16 @@ enum SubscriptionStatus { active trialing past_due canceled expired }
 | `timezone` | String? (default `UTC`) | |
 | `language` | String? (default `en`) | locale code, matches `languages.code` |
 | `company` | String? | |
+| `companyFirstName` / `companyLastName` / `companyEmail` | String? | `company_first_name` / `company_last_name` / `company_email` — company contact (editable in Profile) |
 | `phone` | String? | |
 | `address1` / `address2` | String? | |
 | `city` / `state` / `zip` / `country` | String? | |
 | `website` | String? | |
-| `apiTokenHash` | String? | `api_token_hash` — future API tokens (SHA-256) |
+| `apiTokenHash` | String? | `api_token_hash` — SHA-256 hash of the live API token (generate/revoke via `/api/profile/api-token`) |
+| `adminGroupId` | Int? | `admin_group_id` (FK → `AdminGroup`) — group for staff accounts |
 | `createdAt` | DateTime | `created_at` |
 
-Relations: `ownedOrgs`, `orgMemberships`, `invitedMembers`, `sentInvitations`, `createdData`, `activityLogs`, `accounts`, `sessions`, `activeSessions`, `userRoles`.
+Relations: `adminGroup`, `ownedOrgs`, `orgMemberships`, `invitedMembers`, `sentInvitations`, `createdData`, `activityLogs`, `accounts`, `sessions`, `activeSessions`, `userRoles`.
 
 ### `Organization` — table `organizations` (Tenant)
 
@@ -141,12 +146,22 @@ Indexes: `orgId`, `userId`, `createdAt`.
 
 - `Plan` — `name`, `slug` (unique), `description`, `priceMonthly` (`DECIMAL(10,2)`), `currency`, `billingCycle` (`monthly`/`yearly`), `trialDays`, `requiresPayment`, `isActive`, timestamps.
 - `PlanFeature` — `planId`, `key`, `label`, `value` (seeded: Free / Pro / Enterprise).
-- `Subscription` — `orgId` (**unique** — one active plan per tenant), `planId`, `status` (`SubscriptionStatus`), `startsAt`, `endsAt`. Change plan via `PATCH /api/subscriptions`.
+- `Subscription` — `orgId` (**unique** — one active plan per tenant), `planId`, `status` (`SubscriptionStatus`, incl. `pending`), `autoRenew` (default `true`), `credits` (int), `subscribers` (int), `startsAt`, `endsAt`. Managed via `GET/PATCH /api/subscriptions` and `PATCH /api/subscriptions/[id]` (`subscription.manage`).
 
 ### App settings & languages
 
 - `AppSetting` — `key` (unique) + `value`; arbitrary key/value config, managed via `GET/PUT /api/settings` (`system.settings`).
 - `Language` — `code` (unique), `name`, `region`, `isActive`; seeded with 18 common locales, managed via `/api/languages` (`languages.manage`). Active languages power the profile language picker.
+
+### Admin modules (Finance, Admins, Templates, Logs & Monitor)
+
+- `Currency` — `name`, `code` (unique), `symbol`, `exchangeRate`, `isDefault`, `isActive`; managed via `/api/currencies` (`currency.manage`).
+- `PaymentGateway` — `name`, `slug` (unique), `type`, `config` (JSON object of API keys/credentials), `isActive`; managed via `/api/gateways` (`gateway.manage`).
+- `CreditPackage` — `name`, `credits`, `price` (`DECIMAL(10,2)`), `currency`, `isVisible`, `isActive`; managed via `/api/credit-packages` (`credit.manage`).
+- `AdminGroup` — `name` (unique), `description`, `isActive`; links to `User.adminGroupId`; managed via `/api/admin-groups` (`admin.manage`).
+- `EmailTemplate` — `name`, `slug` (unique), `category`, `html`, `isActive`; managed via `/api/templates` (`template.manage`).
+- `TrackingLog` — email send tracking: `userId`, `orgId`, `to`, `subject`, `status` (`EmailTrackingStatus`), `openedAt`, `clickedAt`, `sentAt`, timestamps; read via `/api/logs/tracking` (`log.view`).
+- `Blacklist` — `emailOrDomain` (unique), `reason`, `createdAt`; managed via `/api/logs/blacklist` (`log.view`).
 
 ## Applying the Migration
 

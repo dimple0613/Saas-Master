@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { User, Shield, Bell, Monitor } from "lucide-react";
+import { User, Shield, Bell, Monitor, KeyRound } from "lucide-react";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -20,6 +20,10 @@ interface Profile {
   timezone: string | null;
   language: string | null;
   company: string | null;
+  company_first_name: string | null;
+  company_last_name: string | null;
+  company_email: string | null;
+  image: string | null;
   phone: string | null;
   address1: string | null;
   address2: string | null;
@@ -76,6 +80,10 @@ export function ProfilePage() {
   const [timezone, setTimezone] = useState("UTC");
   const [language, setLanguage] = useState("en");
   const [company, setCompany] = useState("");
+  const [companyFirstName, setCompanyFirstName] = useState("");
+  const [companyLastName, setCompanyLastName] = useState("");
+  const [companyEmail, setCompanyEmail] = useState("");
+  const [image, setImage] = useState("");
   const [phone, setPhone] = useState("");
   const [address1, setAddress1] = useState("");
   const [address2, setAddress2] = useState("");
@@ -101,6 +109,40 @@ export function ProfilePage() {
   // Sessions
   const [sessions, setSessions] = useState<{ active: SessionInfo[] } | null>(null);
 
+  // API token
+  const [apiToken, setApiToken] = useState<{ hasToken: boolean; plainToken: string | null }>({ hasToken: false, plainToken: null });
+  const [tokenBusy, setTokenBusy] = useState(false);
+  const [tokenMsg, setTokenMsg] = useState({ type: "" as "" | "success" | "error", text: "" });
+
+  async function loadApiToken() {
+    const res = await fetch("/api/profile/api-token");
+    const data = await res.json();
+    setApiToken({ hasToken: Boolean(data.hasToken), plainToken: null });
+  }
+
+  async function generateApiToken() {
+    setTokenBusy(true);
+    setTokenMsg({ type: "", text: "" });
+    const res = await fetch("/api/profile/api-token", { method: "POST" });
+    const data = await res.json();
+    setTokenBusy(false);
+    if (data.token) {
+      setApiToken({ hasToken: true, plainToken: data.token });
+      setTokenMsg({ type: "success", text: "Token generated. Copy it now — it won't be shown again." });
+    } else {
+      setTokenMsg({ type: "error", text: data.error || "Failed to generate token" });
+    }
+  }
+
+  async function revokeApiToken() {
+    setTokenBusy(true);
+    await fetch("/api/profile/api-token", { method: "DELETE" });
+    setTokenBusy(false);
+    setApiToken({ hasToken: false, plainToken: null });
+    setTokenMsg({ type: "success", text: "API token revoked" });
+  }
+
+
   async function loadSessions() {
     const res = await fetch("/api/sessions");
     const data = await res.json();
@@ -120,6 +162,10 @@ export function ProfilePage() {
       setTimezone(data.timezone || "UTC");
       setLanguage(data.language || "en");
       setCompany(data.company || "");
+      setCompanyFirstName(data.company_first_name || "");
+      setCompanyLastName(data.company_last_name || "");
+      setCompanyEmail(data.company_email || "");
+      setImage(data.image || "");
       setPhone(data.phone || "");
       setAddress1(data.address1 || "");
       setAddress2(data.address2 || "");
@@ -138,6 +184,7 @@ export function ProfilePage() {
       setNotifMarketing(data.marketing_emails);
     });
     loadSessions();
+    loadApiToken();
   }, []);
 
   async function saveProfile() {
@@ -148,6 +195,10 @@ export function ProfilePage() {
       timezone,
       language,
       company,
+      company_first_name: companyFirstName,
+      company_last_name: companyLastName,
+      company_email: companyEmail,
+      image,
       phone,
       address1,
       address2,
@@ -160,7 +211,7 @@ export function ProfilePage() {
     const data = await res.json();
     if (data.error) { setMsg({ type: "error", text: data.error }); } else {
       setMsg({ type: "success", text: "Profile updated" });
-      setProfile((p) => p ? { ...p, first_name: firstName, last_name: lastName, timezone, language, company, phone, address1, address2, city, state, zip, country, website } : p);
+      setProfile((p) => p ? { ...p, first_name: firstName, last_name: lastName, timezone, language, company, company_first_name: companyFirstName, company_last_name: companyLastName, company_email: companyEmail, image, phone, address1, address2, city, state, zip, country, website } : p);
       setEditing(false);
     }
   }
@@ -216,18 +267,26 @@ export function ProfilePage() {
                     <AlertDescription>{msg.text}</AlertDescription>
                   </Alert>
                 )}
-                <div className="mb-6 flex items-center gap-4 border-b border-border pb-6">
-                  <div className="flex h-16 w-16 items-center justify-center rounded-full bg-primary text-primary-foreground text-2xl font-semibold">
-                    {(profile.first_name || profile.email).charAt(0).toUpperCase()}
+                  <div className="mb-6 flex items-center gap-4 border-b border-border pb-6">
+                    <div className="flex h-16 w-16 items-center justify-center overflow-hidden rounded-full bg-primary text-primary-foreground text-2xl font-semibold">
+                      {profile.image ? (
+                        // eslint-disable-next-line @next/next/no-img-element
+                        <img src={profile.image} alt={profile.first_name} className="h-full w-full object-cover" />
+                      ) : (
+                        (profile.first_name || profile.email).charAt(0).toUpperCase()
+                      )}
+                    </div>
+                    <div className="min-w-0">
+                      <p className="text-lg font-semibold text-foreground">{profile.first_name} {profile.last_name}</p>
+                      <p className="text-sm text-muted-foreground">{profile.email}</p>
+                    </div>
                   </div>
-                  <div>
-                    <p className="text-lg font-semibold text-foreground">{profile.first_name} {profile.last_name}</p>
-                    <p className="text-sm text-muted-foreground">{profile.email}</p>
-                  </div>
-                </div>
                 <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                   <Field label="First Name" editing={editing} value={firstName} onChange={setFirstName} />
                   <Field label="Last Name" editing={editing} value={lastName} onChange={setLastName} />
+                  <div className="sm:col-span-2">
+                    <Field label="Photo URL" editing={editing} value={image} onChange={setImage} placeholder="https://..." />
+                  </div>
                   <div><Label className="mb-1 block text-xs text-muted-foreground">Email</Label><p className="text-sm font-medium text-foreground">{profile.email}</p></div>
                   <div><Label className="mb-1 block text-xs text-muted-foreground">Role</Label><p className="text-sm font-medium text-foreground capitalize">{profile.role}</p></div>
                   <div><Label className="mb-1 block text-xs text-muted-foreground">Member Since</Label><p className="text-sm font-medium text-foreground">{new Date(profile.created_at).toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" })}</p></div>
@@ -263,6 +322,11 @@ export function ProfilePage() {
                   <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                     <Field label="Company" editing={editing} value={company} onChange={setCompany} />
                     <Field label="Phone" editing={editing} value={phone} onChange={setPhone} />
+                    <Field label="Company Contact First Name" editing={editing} value={companyFirstName} onChange={setCompanyFirstName} />
+                    <Field label="Company Contact Last Name" editing={editing} value={companyLastName} onChange={setCompanyLastName} />
+                    <div className="sm:col-span-2">
+                      <Field label="Company Contact Email" editing={editing} value={companyEmail} onChange={setCompanyEmail} type="email" />
+                    </div>
                     <div className="sm:col-span-2">
                       <Field label="Address Line 1" editing={editing} value={address1} onChange={setAddress1} />
                     </div>
@@ -283,7 +347,26 @@ export function ProfilePage() {
                   {editing ? (
                     <>
                       <Button onClick={saveProfile}>Save</Button>
-                      <Button variant="outline" onClick={() => { setEditing(false); setFirstName(profile.first_name || ""); setLastName(profile.last_name || ""); }}>Cancel</Button>
+                      <Button variant="outline" onClick={() => {
+                        setEditing(false);
+                        setFirstName(profile.first_name || "");
+                        setLastName(profile.last_name || "");
+                        setCompany(profile.company || "");
+                        setCompanyFirstName(profile.company_first_name || "");
+                        setCompanyLastName(profile.company_last_name || "");
+                        setCompanyEmail(profile.company_email || "");
+                        setImage(profile.image || "");
+                        setPhone(profile.phone || "");
+                        setAddress1(profile.address1 || "");
+                        setAddress2(profile.address2 || "");
+                        setCity(profile.city || "");
+                        setState(profile.state || "");
+                        setZip(profile.zip || "");
+                        setCountry(profile.country || "");
+                        setWebsite(profile.website || "");
+                        setTimezone(profile.timezone || "UTC");
+                        setLanguage(profile.language || "en");
+                      }}>Cancel</Button>
                     </>
                   ) : (
                     <Button onClick={() => setEditing(true)}>Edit Profile</Button>
@@ -308,6 +391,36 @@ export function ProfilePage() {
                   <div className="space-y-2"><Label>Confirm New Password</Label><Input type="password" value={confirmNewPassword} onChange={(e) => setConfirmNewPassword(e.target.value)} /></div>
                   <Button type="submit">Update Password</Button>
                 </form>
+              </div>
+
+              <div className="rounded-lg border border-border bg-card p-6">
+                <h2 className="font-heading mb-1 flex items-center gap-2 text-lg font-semibold text-foreground">
+                  <KeyRound className="h-4 w-4 text-muted-foreground" />API Token
+                </h2>
+                <p className="mb-4 text-sm text-muted-foreground">
+                  Use your API token to authenticate API requests. Store it somewhere safe — it is only shown once when generated.
+                </p>
+                {tokenMsg.text && (
+                  <Alert variant={tokenMsg.type === "error" ? "destructive" : "default"} className="mb-4">
+                    <AlertDescription>{tokenMsg.text}</AlertDescription>
+                  </Alert>
+                )}
+                {apiToken.plainToken && (
+                  <div className="mb-4 flex items-center gap-2">
+                    <code className="flex-1 break-all rounded-md border border-border bg-muted px-3 py-2 text-xs text-foreground">{apiToken.plainToken}</code>
+                    <Button variant="outline" size="sm" onClick={() => { navigator.clipboard?.writeText(apiToken.plainToken || ""); setTokenMsg({ type: "success", text: "Copied to clipboard" }); }}>Copy</Button>
+                  </div>
+                )}
+                <div className="flex items-center gap-2">
+                  {apiToken.hasToken ? (
+                    <>
+                      <Button variant="outline" size="sm" disabled={tokenBusy} onClick={generateApiToken}>Rotate Token</Button>
+                      <Button variant="destructive" size="sm" disabled={tokenBusy} onClick={revokeApiToken}>Revoke Token</Button>
+                    </>
+                  ) : (
+                    <Button disabled={tokenBusy} onClick={generateApiToken}>Generate Token</Button>
+                  )}
+                </div>
               </div>
             </div>
           </TabsContent>
