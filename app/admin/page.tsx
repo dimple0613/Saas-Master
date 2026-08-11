@@ -6,6 +6,7 @@ import { SuperAdminChart } from "@/components/dashboard/superadmin-chart";
 import { SuperAdminAreaChart } from "@/components/dashboard/superadmin-area-chart";
 import { SuperAdminRecentActivity } from "@/components/dashboard/superadmin-recent";
 import { RecentSubscriptions } from "@/components/dashboard/recent-subscriptions";
+import { RecentCustomers } from "@/components/dashboard/recent-customers";
 import { TopCustomers } from "@/components/dashboard/top-customers";
 import { OrgQuickActions } from "@/components/dashboard/org-quick-actions";
 import { QuickLinks } from "@/components/dashboard/quick-links";
@@ -41,6 +42,7 @@ export default function SuperAdminPage() {
         </div>
       </div>
       <SuperAdminAreaChart />
+      <RecentCustomers />
     </div>
   );
 }

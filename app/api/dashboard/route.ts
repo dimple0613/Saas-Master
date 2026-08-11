@@ -75,6 +75,27 @@ export async function GET(req: NextRequest) {
           subscription: { select: { subscribers: true, status: true, plan: { select: { name: true } } } },
         },
       });
+      const recentCustomers = await prisma.user.findMany({
+        where: { kind: "customer" },
+        take: 10,
+        orderBy: { createdAt: "desc" },
+        include: {
+          ownedOrgs: {
+            include: {
+              subscription: { include: { plan: { select: { name: true } } } },
+            },
+          },
+          orgMemberships: {
+            include: {
+              org: {
+                include: {
+                  subscription: { include: { plan: { select: { name: true } } } },
+                },
+              },
+            },
+          },
+        },
+      });
       const memberGrowth = await prisma.$queryRawUnsafe<{ month: string; count: bigint }[]>(`
         SELECT TO_CHAR(created_at, 'Mon') AS month, COUNT(*) AS count
         FROM users
@@ -120,6 +141,20 @@ export async function GET(req: NextRequest) {
           status: o.subscription?.status ?? "none",
           plan: o.subscription?.plan?.name ?? "—",
         })),
+        recentCustomers: recentCustomers.map((c) => {
+          const sub =
+            c.ownedOrgs.map((o) => o.subscription).find(Boolean) ??
+            c.orgMemberships.map((m) => m.org.subscription).find(Boolean) ??
+            null;
+          return {
+            id: c.id,
+            name: `${c.firstName || ""} ${c.lastName || ""}`.trim() || c.email || "Unknown",
+            email: c.email,
+            plan: sub?.plan?.name ?? null,
+            status: c.status,
+            joinedAt: c.createdAt.toISOString(),
+          };
+        }),
         chartData: monthlyData.map((d) => ({ month: d.month, value: Number(d.count) })),
         memberGrowth: memberGrowth.map((d) => ({ month: d.month, value: Number(d.count) })),
         recentActivity: recentActivity.map((a) => ({
