@@ -14,8 +14,8 @@ interface SearchItem {
 
 const ADMIN_ITEMS: SearchItem[] = [
   { label: "Dashboard", href: "/admin", icon: LayoutDashboard, keywords: ["dashboard", "home", "overview", "main"] },
-  { label: "Customers", href: "/admin/customers", icon: Users, keywords: ["customers", "clients", "accounts", "tenants"] },
-  { label: "Users", href: "/admin/users", icon: UserCog, keywords: ["users", "members", "people"] },
+  { label: "Members", href: "/app/members", icon: Users, keywords: ["members", "people", "invites"] },
+  { label: "Users", href: "/admin/users", icon: UserCog, keywords: ["users", "customers", "people"] },
   { label: "Subscriptions", href: "/admin/subscriptions", icon: CreditCard, keywords: ["subscriptions", "billing", "recurring", "trials"] },
   { label: "Plans", href: "/admin/plans", icon: LayoutGrid, keywords: ["plans", "pricing", "packages"] },
   { label: "Accounts", href: "/admin/accounts", icon: Building2, keywords: ["accounts", "organizations", "tenants", "orgs"] },

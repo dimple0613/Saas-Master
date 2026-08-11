@@ -1,6 +1,7 @@
 import { auth } from "@/lib/auth";
 import { SessionProvider } from "next-auth/react";
 import { TenantShell } from "@/components/tenant-shell";
+import { AppRouteGuard } from "@/components/app-route-guard";
 import { redirect } from "next/navigation";
 
 export default async function AppLayout({
@@ -14,13 +15,11 @@ export default async function AppLayout({
     redirect("/login");
   }
 
-  if (session.user?.role === "superadmin") {
-    redirect("/admin");
-  }
-
   return (
     <SessionProvider session={session}>
-      <TenantShell>{children}</TenantShell>
+      <AppRouteGuard>
+        <TenantShell>{children}</TenantShell>
+      </AppRouteGuard>
     </SessionProvider>
   );
 }

@@ -155,10 +155,10 @@ function getNavItems(variant: ShellVariant) {
         ],
       },
       {
-        key: "customers",
-        label: "Customers",
+        key: "people",
+        label: "People",
         items: [
-          { label: "Customers", href: "/admin/customers", icon: Users },
+          { label: "Members", href: "/app/members", icon: Users },
           { label: "Users", href: "/admin/users", icon: UserCog },
         ],
       },
