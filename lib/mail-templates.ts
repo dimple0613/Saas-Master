@@ -83,14 +83,15 @@ ${button(resetUrl, "Reset password")}
 
 export function inviteMemberTemplate(
   user: TemplateUser,
-  data: { inviterName: string; orgName: string; role: string; token: string }
+  data: { inviterName: string; orgName: string; role: string; token: string; expiresInHours?: number }
 ): string {
   const acceptUrl = `${getAppBaseUrl()}/invite?token=${encodeURIComponent(data.token)}`;
+  const expiresInHours = data.expiresInHours || 24;
   const body = `
 <p style="margin:0 0 12px 0;">Hi ${escapeHtml(user.name || user.email || "there")},</p>
 <p style="margin:0 0 12px 0;"><strong>${escapeHtml(data.inviterName)}</strong> has invited you to join <strong>${escapeHtml(data.orgName)}</strong> as <strong>${escapeHtml(data.role)}</strong>.</p>
 ${button(acceptUrl, "Accept invitation")}
-<p style="margin:0 0 12px 0;">This invitation expires in <strong>24 hours</strong>.</p>
+<p style="margin:0 0 12px 0;">This invitation expires in <strong>${expiresInHours} hour${expiresInHours === 1 ? "" : "s"}</strong>.</p>
 <p style="margin:0 0 12px 0;">Or copy and paste this link into your browser:</p>
 <p style="margin:0;word-break:break-all;font-size:13px;color:#52525b;">${escapeHtml(acceptUrl)}</p>`;
   return layout(body);

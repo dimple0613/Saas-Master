@@ -1,9 +1,11 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
-import { UserPlus, Users, Shield, Mail, UserX, Clock, MoreVertical, CheckCircle2, Ban, Loader2, Trash2 } from "lucide-react";
+import { useSession } from "next-auth/react";
+import { UserPlus, Users, Shield, Mail, Clock, MoreVertical, CheckCircle2, Loader2, Trash2, Copy, Send } from "lucide-react";
+import { toast } from "sonner";
 import { AppBreadcrumb } from "@/components/app-breadcrumb";
+import { useOrg } from "@/lib/org-context";
 import {
   useReactTable,
   getCoreRowModel,
@@ -30,37 +32,32 @@ import {
   DropdownMenuItem,
   DropdownMenuSeparator,
 } from "@/components/ui/dropdown-menu";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Info } from "lucide-react";
 import { DataTable } from "@/components/tables/data-table";
 import { DataTableColumnHeader } from "@/components/tables/data-table-column-header";
 import { DataTablePagination } from "@/components/tables/data-table-pagination";
 import { DataTableToolbar } from "@/components/tables/data-table-toolbar";
 import { DataTableFacetedFilter } from "@/components/tables/data-table-faceted-filter";
 import { ConfirmDialog } from "@/components/common/confirm-dialog";
+import { InviteMemberDialog } from "@/components/members/invite-member-dialog";
+
+type MemberStatus = "active" | "invitation_pending";
 
 interface Member {
-  id: number;
+  id: string;
+  kind: "member" | "invitation";
+  avatarId: number;
   name: string;
   email: string;
   phone: string;
   role: string;
-  status: "active" | "inactive" | "pending";
+  status: MemberStatus;
   joined: string;
+  orgId: number;
+  memberId: number | null;
+  invitationId: number | null;
 }
-
-const STATIC_MEMBERS: Member[] = [
-  { id: 1, name: "Olivia Martin", email: "olivia.martin@email.com", phone: "+1 (555) 123-4567", role: "Admin", status: "active", joined: "2024-01-15" },
-  { id: 2, name: "Jackson Lee", email: "jackson.lee@email.com", phone: "+1 (555) 234-5678", role: "Member", status: "active", joined: "2024-02-20" },
-  { id: 3, name: "Isabella Nguyen", email: "isabella.nguyen@email.com", phone: "+1 (555) 345-6789", role: "Member", status: "active", joined: "2024-03-10" },
-  { id: 4, name: "William Kim", email: "william.kim@email.com", phone: "+1 (555) 456-7890", role: "Member", status: "inactive", joined: "2024-04-05" },
-  { id: 5, name: "Sofia Davis", email: "sofia.davis@email.com", phone: "+1 (555) 567-8901", role: "Admin", status: "active", joined: "2024-05-12" },
-  { id: 6, name: "Lucas Brown", email: "lucas.brown@email.com", phone: "+1 (555) 678-9012", role: "Member", status: "pending", joined: "2024-06-18" },
-  { id: 7, name: "Emma Wilson", email: "emma.wilson@email.com", phone: "+1 (555) 789-0123", role: "Member", status: "active", joined: "2024-07-22" },
-  { id: 8, name: "Liam Johnson", email: "liam.johnson@email.com", phone: "+1 (555) 890-1234", role: "Member", status: "active", joined: "2024-08-30" },
-  { id: 9, name: "Ava Taylor", email: "ava.taylor@email.com", phone: "+1 (555) 901-2345", role: "Member", status: "inactive", joined: "2024-09-14" },
-  { id: 10, name: "Noah Anderson", email: "noah.anderson@email.com", phone: "+1 (555) 012-3456", role: "Member", status: "active", joined: "2024-10-08" },
-  { id: 11, name: "Mia Thomas", email: "mia.thomas@email.com", phone: "+1 (555) 111-2222", role: "Member", status: "pending", joined: "2024-11-03" },
-  { id: 12, name: "Ethan Garcia", email: "ethan.garcia@email.com", phone: "+1 (555) 222-3333", role: "Member", status: "active", joined: "2024-12-19" },
-];
 
 const COLUMN_IDS = ["name", "role", "status", "joined", "actions"] as const;
 
@@ -99,11 +96,21 @@ function loadInitialVisibility(): VisibilityState {
   return {};
 }
 
+const ROLE_LABELS: Record<string, string> = {
+  owner: "Owner",
+  admin: "Admin",
+  member: "Member",
+};
+
+function statusLabel(status: MemberStatus): string {
+  return status === "active" ? "Active" : "Invitation Pending";
+}
+
 const memberGlobalFilter: FilterFn<Member> = (row, _columnId, filterValue) => {
   const member = row.original;
   const q = String(filterValue ?? "").toLowerCase();
   if (!q) return true;
-  return [member.name, member.email, member.role, member.status].some((f) =>
+  return [member.name, member.email, ROLE_LABELS[member.role] || member.role, statusLabel(member.status)].some((f) =>
     f.toLowerCase().includes(q)
   );
 };
@@ -116,8 +123,7 @@ const statusFilterFn: FilterFn<Member> = (row, columnId, filterValue) => {
 
 const STATUS_OPTIONS = [
   { value: "active", label: "Active", icon: CheckCircle2 },
-  { value: "pending", label: "Pending", icon: Clock },
-  { value: "inactive", label: "Inactive", icon: Ban },
+  { value: "invitation_pending", label: "Invitation Pending", icon: Clock },
 ];
 
 const columns: ColumnDef<Member>[] = [
@@ -129,9 +135,9 @@ const columns: ColumnDef<Member>[] = [
       <div className="flex items-center gap-3">
         <Avatar size="sm">
           <AvatarFallback
-            className={`bg-gradient-to-br ${AVATAR_COLORS[(row.original.id - 1) % AVATAR_COLORS.length]} text-white text-xs`}
+            className={`bg-gradient-to-br ${AVATAR_COLORS[(row.original.avatarId - 1) % AVATAR_COLORS.length]} text-white text-xs`}
           >
-            {row.original.name.split(" ").map((n) => n[0]).join("")}
+            {row.original.name.split(" ").map((n) => n[0]).join("").slice(0, 2).toUpperCase()}
           </AvatarFallback>
         </Avatar>
         <div className="min-w-0">
@@ -146,8 +152,8 @@ const columns: ColumnDef<Member>[] = [
     accessorKey: "role",
     header: ({ column }) => <DataTableColumnHeader column={column} title="Role" />,
     cell: ({ row }) => (
-      <Badge variant={row.original.role === "Admin" ? "default" : "secondary"}>
-        {row.original.role}
+      <Badge variant={ROLE_LABELS[row.original.role] === "Admin" ? "default" : "secondary"}>
+        {ROLE_LABELS[row.original.role] || row.original.role}
       </Badge>
     ),
   },
@@ -158,27 +164,18 @@ const columns: ColumnDef<Member>[] = [
     header: ({ column }) => <DataTableColumnHeader column={column} title="Status" />,
     cell: ({ row }) => {
       const status = row.original.status;
-      const StatusIcon =
-        status === "active"
-          ? CheckCircle2
-          : status === "pending"
-            ? Loader2
-            : Ban;
+      const StatusIcon = status === "active" ? CheckCircle2 : Clock;
       const iconClassName =
         status === "active"
           ? "text-green-500 dark:text-green-400"
-          : status === "pending"
-            ? "text-yellow-500 dark:text-yellow-400"
-            : "text-muted-foreground";
+          : "text-yellow-500 dark:text-yellow-400";
       return (
         <Badge
           variant="outline"
           className="rounded-full border-border px-1.5 text-muted-foreground"
         >
-          <StatusIcon
-            className={`h-3 w-3 ${iconClassName} ${status === "pending" ? "animate-spin" : ""}`}
-          />
-          {status}
+          <StatusIcon className={`h-3 w-3 ${iconClassName}`} />
+          {statusLabel(status)}
         </Badge>
       );
     },
@@ -211,10 +208,81 @@ const columns: ColumnDef<Member>[] = [
 function MemberRowActions({ member }: { member: Member }) {
   const [open, setOpen] = useState(false);
   const [confirmOpen, setConfirmOpen] = useState(false);
+  const [busy, setBusy] = useState(false);
+  const [refreshed, setRefreshed] = useState(0);
+
+  const isInvitation = member.kind === "invitation";
+  const orgId = member.orgId;
+  const invitationId = member.invitationId;
 
   function handleRemove() {
     setConfirmOpen(false);
   }
+
+  async function handleCopyInviteLink() {
+    if (!orgId || !invitationId) return;
+    setOpen(false);
+    setBusy(true);
+    try {
+      const res = await fetch(`/api/orgs/${orgId}/invitations/${invitationId}/link`, { method: "POST" });
+      const data = await res.json();
+      if (data.error) {
+        toast.error(data.error);
+        return;
+      }
+      const link = `${window.location.origin}${data.link}`;
+      await navigator.clipboard.writeText(link);
+      toast.success("Invite link copied to clipboard");
+    } catch {
+      toast.error("Something went wrong");
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  async function handleResendInvitation() {
+    if (!orgId || !invitationId) return;
+    setOpen(false);
+    setBusy(true);
+    try {
+      const res = await fetch(`/api/orgs/${orgId}/invitations/${invitationId}/resend`, { method: "POST" });
+      const data = await res.json();
+      if (data.error) {
+        toast.error(data.error);
+        return;
+      }
+      toast.success("Invitation resent");
+    } catch {
+      toast.error("Something went wrong");
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  async function handleWithdrawInvitation() {
+    if (!orgId || !invitationId) return;
+    setConfirmOpen(false);
+    setBusy(true);
+    try {
+      const res = await fetch(`/api/orgs/${orgId}/invitations/${invitationId}`, { method: "DELETE" });
+      const data = await res.json();
+      if (data.error) {
+        toast.error(data.error);
+        return;
+      }
+      toast.success("Invitation withdrawn");
+      setRefreshed((n) => n + 1);
+    } catch {
+      toast.error("Something went wrong");
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  useEffect(() => {
+    if (refreshed === 0) return;
+    window.dispatchEvent(new CustomEvent("members-refresh"));
+  }, [refreshed]);
 
   return (
     <>
@@ -222,52 +290,94 @@ function MemberRowActions({ member }: { member: Member }) {
         <DropdownMenuTrigger render={<Button variant="ghost" size="icon-sm" />}>
           <MoreVertical className="h-4 w-4 text-muted-foreground" />
         </DropdownMenuTrigger>
-        <DropdownMenuContent align="end" className="w-40 p-1">
-          <DropdownMenuItem className="py-0.5" onClick={() => setOpen(false)}>
-            <Mail className="h-3.5 w-3.5" />
-            Send Email
-          </DropdownMenuItem>
-          <DropdownMenuItem className="py-0.5" onClick={() => setOpen(false)}>
-            <Shield className="h-3.5 w-3.5" />
-            Change Role
-          </DropdownMenuItem>
-          <DropdownMenuSeparator />
-          <DropdownMenuItem
-            variant="destructive"
-            className="py-0.5"
-            onClick={() => {
-              setOpen(false);
-              setConfirmOpen(true);
-            }}
-          >
-            <Trash2 className="h-3.5 w-3.5" />
-            Remove
-          </DropdownMenuItem>
+        <DropdownMenuContent align="end" className="w-48 p-1">
+          {isInvitation ? (
+            <>
+              <DropdownMenuItem className="py-0.5" onClick={handleCopyInviteLink} disabled={busy}>
+                <Copy className="h-3.5 w-3.5" />
+                Copy Invite Link
+              </DropdownMenuItem>
+              <DropdownMenuItem className="py-0.5" onClick={handleResendInvitation} disabled={busy}>
+                <Send className="h-3.5 w-3.5" />
+                Resend Invitation
+              </DropdownMenuItem>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem
+                variant="destructive"
+                className="py-0.5"
+                onClick={() => {
+                  setOpen(false);
+                  setConfirmOpen(true);
+                }}
+              >
+                <Trash2 className="h-3.5 w-3.5" />
+                Remove
+              </DropdownMenuItem>
+            </>
+          ) : (
+            <>
+              <DropdownMenuItem className="py-0.5" onClick={() => setOpen(false)}>
+                <Mail className="h-3.5 w-3.5" />
+                Send Email
+              </DropdownMenuItem>
+              <DropdownMenuItem className="py-0.5" onClick={() => setOpen(false)}>
+                <Shield className="h-3.5 w-3.5" />
+                Change Role
+              </DropdownMenuItem>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem
+                variant="destructive"
+                className="py-0.5"
+                onClick={() => {
+                  setOpen(false);
+                  setConfirmOpen(true);
+                }}
+              >
+                <Trash2 className="h-3.5 w-3.5" />
+                Remove
+              </DropdownMenuItem>
+            </>
+          )}
         </DropdownMenuContent>
       </DropdownMenu>
       <ConfirmDialog
         open={confirmOpen}
         onOpenChange={setConfirmOpen}
-        title="Remove Member?"
-        description="Are you sure you want to remove this member? This action cannot be undone."
-        confirmLabel="Remove"
+        title={isInvitation ? "Withdraw Invitation?" : "Remove Member?"}
+        description={
+          isInvitation
+            ? "The invitation link will stop working and the member won't be able to join. You can send a new invitation later."
+            : "Are you sure you want to remove this member? This action cannot be undone."
+        }
+        confirmLabel={isInvitation ? "Withdraw" : "Remove"}
         cancelLabel="Cancel"
         destructive
-        onConfirm={handleRemove}
+        onConfirm={isInvitation ? handleWithdrawInvitation : handleRemove}
       />
     </>
   );
 }
 
 export default function MembersPage() {
-  const router = useRouter();
-  const [members] = useState<Member[]>(STATIC_MEMBERS);
+  const { orgId } = useOrg();
+  const { data: session } = useSession();
+
+  const isPlatformAdmin =
+    session?.user?.role === "superadmin" || session?.user?.role === "admin";
+
+  const [members, setMembers] = useState<Member[]>([]);
+  const [inviteOpen, setInviteOpen] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState("");
+  const [reload, setReload] = useState(0);
   const [search, setSearch] = useState("");
   const [debouncedSearch, setDebouncedSearch] = useState("");
   const [sorting, setSorting] = useState<SortingState>([]);
   const [pagination, setPagination] = useState<PaginationState>({ pageIndex: 0, pageSize: 10 });
   const [columnVisibility, setColumnVisibility] = useState<VisibilityState>(loadInitialVisibility);
   const [rowSelection, setRowSelection] = useState<RowSelectionState>({});
+
+  const needsOrg = !orgId && !isPlatformAdmin;
 
   useEffect(() => {
     const t = setTimeout(() => setDebouncedSearch(search), 300);
@@ -281,6 +391,43 @@ export default function MembersPage() {
     } catch {}
   }, [columnVisibility]);
 
+  useEffect(() => {
+    if (needsOrg) {
+      setLoading(false);
+      return;
+    }
+    let cancelled = false;
+    setLoading(true);
+    setLoadError("");
+    const query = orgId ? `?orgId=${orgId}` : "";
+    fetch(`/api/members${query}`)
+      .then((r) => r.json())
+      .then((data) => {
+        if (cancelled) return;
+        if (data.error) {
+          setLoadError(data.error);
+          setMembers([]);
+        } else {
+          setMembers(data.members || []);
+        }
+      })
+      .catch(() => {
+        if (!cancelled) setLoadError("Failed to load members.");
+      })
+      .finally(() => {
+        if (!cancelled) setLoading(false);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [orgId, reload, needsOrg]);
+
+  useEffect(() => {
+    const handler = () => setReload((n) => n + 1);
+    window.addEventListener("members-refresh", handler);
+    return () => window.removeEventListener("members-refresh", handler);
+  }, []);
+
   const table = useReactTable({
     data: members,
     columns,
@@ -289,7 +436,7 @@ export default function MembersPage() {
     onPaginationChange: setPagination,
     onColumnVisibilityChange: setColumnVisibility,
     onRowSelectionChange: setRowSelection,
-    getRowId: (row) => String(row.id),
+    getRowId: (row) => row.id,
     globalFilterFn: memberGlobalFilter,
     getCoreRowModel: getCoreRowModel(),
     getSortedRowModel: getSortedRowModel(),
@@ -300,8 +447,7 @@ export default function MembersPage() {
   });
 
   const totalActive = members.filter((m) => m.status === "active").length;
-  const totalPending = members.filter((m) => m.status === "pending").length;
-  const totalInactive = members.filter((m) => m.status === "inactive").length;
+  const totalPending = members.filter((m) => m.status === "invitation_pending").length;
 
   return (
     <div className="space-y-6">
@@ -311,14 +457,14 @@ export default function MembersPage() {
           <h1 className="font-heading text-2xl font-semibold tracking-tight text-foreground">Members</h1>
           <AppBreadcrumb />
         </div>
-        <Button onClick={() => router.push("/app/members/add")} className="h-8 gap-1.5 px-2.5">
+        <Button onClick={() => setInviteOpen(true)} className="h-8 gap-1.5 px-2.5">
           <UserPlus className="h-4 w-4" />
           Add Member
         </Button>
       </div>
 
       {/* Stats */}
-      <div className="grid gap-4 md:grid-cols-4">
+      <div className="grid gap-4 md:grid-cols-3">
         <Card className="shadow-[0_2px_12px_rgba(0,0,0,0.06)]">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Total Members</CardTitle>
@@ -343,7 +489,7 @@ export default function MembersPage() {
         </Card>
         <Card className="shadow-[0_2px_12px_rgba(0,0,0,0.06)]">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Pending</CardTitle>
+            <CardTitle className="text-sm font-medium">Invitation Pending</CardTitle>
             <div className="flex h-8 w-8 items-center justify-center rounded-full bg-primary/10">
               <Clock className="h-4 w-4 text-primary" />
             </div>
@@ -352,44 +498,61 @@ export default function MembersPage() {
             <div className="text-2xl font-bold">{totalPending}</div>
           </CardContent>
         </Card>
-        <Card className="shadow-[0_2px_12px_rgba(0,0,0,0.06)]">
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Inactive</CardTitle>
-            <div className="flex h-8 w-8 items-center justify-center rounded-full bg-primary/10">
-              <UserX className="h-4 w-4 text-primary" />
-            </div>
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{totalInactive}</div>
-          </CardContent>
-        </Card>
       </div>
 
       {/* Table */}
       <div className="rounded-2xl border border-border bg-card shadow-[0_2px_12px_rgba(0,0,0,0.06)]">
-        <div className="space-y-4">
-          <DataTableToolbar
-            table={table}
-            searchValue={search}
-            onSearchChange={setSearch}
-            searchPlaceholder="Search members..."
-            labels={COLUMN_LABELS}
-            filters={
-              <DataTableFacetedFilter
-                column={table.getColumn("status")}
-                title="Status"
-                options={STATUS_OPTIONS}
-              />
-            }
-          />
-          <DataTable
-            table={table}
-            stickyHeader={false}
-            emptyNode={<span className="text-muted-foreground">No members found.</span>}
-          />
-          <DataTablePagination table={table} />
+        {needsOrg ? (
+          <div className="p-6">
+            <Alert>
+              <Info className="h-4 w-4" />
+              <AlertDescription>
+                Please select an organization from the sidebar before viewing members.
+              </AlertDescription>
+            </Alert>
           </div>
+        ) : loading ? (
+          <div className="flex items-center justify-center gap-2 p-16 text-sm text-muted-foreground">
+            <Loader2 className="h-4 w-4 animate-spin" />
+            Loading members...
+          </div>
+        ) : loadError ? (
+          <div className="p-6">
+            <Alert variant="destructive">
+              <AlertDescription>{loadError}</AlertDescription>
+            </Alert>
+          </div>
+        ) : (
+          <div className="space-y-4">
+            <DataTableToolbar
+              table={table}
+              searchValue={search}
+              onSearchChange={setSearch}
+              searchPlaceholder="Search members..."
+              labels={COLUMN_LABELS}
+              filters={
+                <DataTableFacetedFilter
+                  column={table.getColumn("status")}
+                  title="Status"
+                  options={STATUS_OPTIONS}
+                />
+              }
+            />
+            <DataTable
+              table={table}
+              stickyHeader={false}
+              emptyNode={<span className="text-muted-foreground">No members found.</span>}
+            />
+            <DataTablePagination table={table} />
+          </div>
+        )}
       </div>
+
+      <InviteMemberDialog
+        open={inviteOpen}
+        onOpenChange={setInviteOpen}
+        onSuccess={() => setReload((n) => n + 1)}
+      />
     </div>
   );
 }

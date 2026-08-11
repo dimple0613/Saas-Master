@@ -1,23 +1,35 @@
 "use client";
 
 import { useState, useEffect, Suspense } from "react";
-import { useSearchParams } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { signIn } from "next-auth/react";
 import Link from "next/link";
-import { Building2, CheckCircle2, Eye, EyeOff } from "lucide-react";
+import { Building2, CheckCircle2, Eye, EyeOff, Loader2 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 
+interface InviteData {
+  email: string;
+  role: string;
+  orgName: string;
+  orgId: number;
+  firstName?: string | null;
+  lastName?: string | null;
+  hasAccount: boolean;
+}
+
 function InviteContent() {
   const searchParams = useSearchParams();
   const token = searchParams.get("token");
+  const router = useRouter();
 
-  const [inviteData, setInviteData] = useState<{ email: string; role: string; orgName: string; orgId: number } | null>(null);
+  const [inviteData, setInviteData] = useState<InviteData | null>(null);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(() => !!token);
   const [password, setPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [logging, setLogging] = useState(false);
   const [joined, setJoined] = useState(false);
@@ -27,24 +39,45 @@ function InviteContent() {
 
     fetch(`/api/invite/validate?token=${encodeURIComponent(token)}`)
       .then((r) => (r.ok ? r.json() : Promise.reject()))
-      .then((data) => { setInviteData(data); setLoading(false); })
+      .then((data) => {
+        setInviteData({
+          email: data.email,
+          role: data.role,
+          orgName: data.orgName,
+          orgId: data.orgId,
+          firstName: data.firstName,
+          lastName: data.lastName,
+          hasAccount: Boolean(data.hasAccount),
+        });
+        setLoading(false);
+      })
       .catch(() => { setLoading(false); });
   }, [token]);
 
-  async function handleAccept() {
+  async function acceptInvite() {
+    const res = await fetch("/api/invite/accept", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ token, password: password || undefined }),
+    });
+    const data = await res.json();
+    if (data.error) throw new Error(data.error);
+    return data;
+  }
+
+  async function handleCreateAccount(e: React.FormEvent) {
+    e.preventDefault();
     setError("");
+    if (password.length < 8) { setError("Password must be at least 8 characters"); return; }
+    if (password !== confirmPassword) { setError("Passwords do not match"); return; }
     setLogging(true);
     try {
-      const res = await fetch("/api/invite/accept", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ token }),
-      });
-      const data = await res.json();
-      if (data.error) { setError(data.error); }
-      else { setJoined(true); }
-    } catch {
-      setError("Something went wrong");
+      await acceptInvite();
+      const result = await signIn("credentials", { email: inviteData!.email, password, redirect: false });
+      if (result?.error) { setError("Account created. Please sign in."); router.push("/login"); return; }
+      setJoined(true);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Something went wrong");
     } finally {
       setLogging(false);
     }
@@ -57,14 +90,18 @@ function InviteContent() {
     try {
       const result = await signIn("credentials", { email: inviteData!.email, password, redirect: false });
       if (result?.error) { setError("Invalid credentials"); setLogging(false); return; }
-      await handleAccept();
-    } catch {
-      setError("Something went wrong");
+      await acceptInvite();
+      setJoined(true);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Something went wrong");
       setLogging(false);
     }
   }
 
   const roleLabel = inviteData?.role === "owner" ? "Owner" : inviteData?.role === "admin" ? "Admin" : "Member";
+  const memberName = inviteData
+    ? [inviteData.firstName, inviteData.lastName].filter(Boolean).join(" ") || inviteData.email
+    : "";
 
   return (
     <div className="flex min-h-screen items-center justify-center bg-muted/50 px-4 py-[70px] max-sm:py-12">
@@ -76,11 +113,25 @@ function InviteContent() {
               <h1 className="font-heading mb-2 text-center text-2xl font-bold tracking-tight text-foreground">Accept Invitation</h1>
               <p className="mb-6 text-center text-sm text-muted-foreground">You&apos;ve been invited to join an organization.</p>
 
-              {loading && <p className="text-sm text-muted-foreground">Loading...</p>}
+              {loading && (
+                <div className="flex items-center justify-center gap-2 py-8 text-sm text-muted-foreground">
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                  Loading invitation...
+                </div>
+              )}
 
               {!token && !loading && (
                 <div className="text-center">
                   <p className="mb-4 text-sm text-muted-foreground">Invalid invitation link.</p>
+                  <Button variant="outline" render={<Link href="/login" />} className="h-8">
+                    Go to Login
+                  </Button>
+                </div>
+              )}
+
+              {token && !loading && !inviteData && (
+                <div className="text-center">
+                  <p className="mb-4 text-sm text-muted-foreground">This invitation link is invalid or has expired.</p>
                   <Button variant="outline" render={<Link href="/login" />} className="h-8">
                     Go to Login
                   </Button>
@@ -101,34 +152,65 @@ function InviteContent() {
                     </div>
                   </div>
 
-                  <p className="text-sm text-muted-foreground">Please log in or sign up with <strong>{inviteData.email}</strong> to accept.</p>
-
-                  <form onSubmit={handleLogin} className="space-y-4">
-                    <div className="space-y-2">
-                      <Label>Password</Label>
-                      <div className="relative">
-                        <Input type={showPassword ? "text" : "password"} value={password} onChange={(e) => setPassword(e.target.value)} placeholder="Enter your password" required className="h-8 px-3 pr-9" />
-                        <Button type="button" variant="ghost" size="icon-sm" onClick={() => setShowPassword(!showPassword)} className="absolute right-1.5 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground" aria-label={showPassword ? "Hide password" : "Show password"}>
-                          {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                  {inviteData.hasAccount ? (
+                    <>
+                      <p className="text-sm text-muted-foreground">Sign in with <strong>{inviteData.email}</strong> to accept this invitation.</p>
+                      <form onSubmit={handleLogin} className="space-y-4">
+                        <div className="space-y-2">
+                          <Label>Password</Label>
+                          <div className="relative">
+                            <Input type={showPassword ? "text" : "password"} value={password} onChange={(e) => setPassword(e.target.value)} placeholder="Enter your password" required className="h-8 px-3 pr-9" />
+                            <Button type="button" variant="ghost" size="icon-sm" onClick={() => setShowPassword(!showPassword)} className="absolute right-1.5 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground" aria-label={showPassword ? "Hide password" : "Show password"}>
+                              {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                            </Button>
+                          </div>
+                        </div>
+                        {error && (
+                          <Alert variant="destructive">
+                            <AlertDescription>{error}</AlertDescription>
+                          </Alert>
+                        )}
+                        <Button type="submit" disabled={logging} className="h-8 w-full">
+                          {logging ? "Joining..." : "Log In & Accept"}
                         </Button>
-                      </div>
-                    </div>
-                    {error && (
-                      <Alert variant="destructive">
-                        <AlertDescription>{error}</AlertDescription>
-                      </Alert>
-                    )}
-                    <Button type="submit" disabled={logging} className="h-8 w-full">
-                      {logging ? "Joining..." : "Log In & Accept"}
-                    </Button>
-                  </form>
-
-                  <p className="text-center text-sm text-muted-foreground">
-                    Don&apos;t have an account?{" "}
-                    <Link href={`/signup?invite_token=${token}`} className="font-medium text-foreground underline underline-offset-4">
-                      Sign up
-                    </Link>
-                  </p>
+                      </form>
+                    </>
+                  ) : (
+                    <>
+                      <p className="text-sm text-muted-foreground">Create your account for <strong>{inviteData.email}</strong> and set a password to accept this invitation.</p>
+                      <form onSubmit={handleCreateAccount} className="space-y-4">
+                        <div className="space-y-2">
+                          <Label>Full Name</Label>
+                          <Input value={memberName} readOnly className="h-8 bg-muted/50 text-muted-foreground" />
+                        </div>
+                        <div className="space-y-2">
+                          <Label>Email</Label>
+                          <Input value={inviteData.email} readOnly className="h-8 bg-muted/50 text-muted-foreground" />
+                        </div>
+                        <div className="space-y-2">
+                          <Label>Password</Label>
+                          <div className="relative">
+                            <Input type={showPassword ? "text" : "password"} value={password} onChange={(e) => setPassword(e.target.value)} placeholder="Create a password" required autoComplete="new-password" className="h-8 px-3 pr-9" />
+                            <Button type="button" variant="ghost" size="icon-sm" onClick={() => setShowPassword(!showPassword)} className="absolute right-1.5 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground" aria-label={showPassword ? "Hide password" : "Show password"}>
+                              {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                            </Button>
+                          </div>
+                        </div>
+                        <div className="space-y-2">
+                          <Label>Confirm Password</Label>
+                          <Input type={showPassword ? "text" : "password"} value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} placeholder="Confirm your password" required autoComplete="new-password" className="h-8 px-3" />
+                        </div>
+                        {error && (
+                          <Alert variant="destructive">
+                            <AlertDescription>{error}</AlertDescription>
+                          </Alert>
+                        )}
+                        <Button type="submit" disabled={logging} className="h-8 w-full">
+                          {logging ? "Creating account..." : "Create Account & Accept"}
+                        </Button>
+                      </form>
+                    </>
+                  )}
                 </div>
               )}
 

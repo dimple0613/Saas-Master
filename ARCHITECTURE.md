@@ -33,7 +33,7 @@ app/
   app/                    # Tenant dashboard -> /app/*
     layout.tsx            # Auth + not-superadmin + TenantShell
     page.tsx              # Tenant dashboard (/app)
-    members/ members/add/ organizations/[id]/
+    members/ organizations/[id]/
     settings/ notifications/ profile/
   api/
     auth/                 # next-auth handlers + signup/forgot/reset

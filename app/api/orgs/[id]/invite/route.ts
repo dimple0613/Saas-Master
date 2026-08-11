@@ -2,11 +2,11 @@ import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { logActivity } from "@/lib/activity";
-import { hasTenantPermission } from "@/lib/permissions";
+import { hasTenantPermission, hasSystemPermission } from "@/lib/permissions";
 import { sendMail } from "@/lib/mail";
 import { inviteMemberTemplate } from "@/lib/mail-templates";
-import crypto from "crypto";
 import { hashToken } from "@/lib/tokens";
+import { generateInviteToken, getInviteExpiry, getInviteExpiryHours } from "@/lib/invites";
 
 export async function POST(
   req: NextRequest,
@@ -19,10 +19,14 @@ export async function POST(
   const orgId = parseInt(id);
   const userId = parseInt(session.user.id);
 
-  const canInvite = await hasTenantPermission(userId, orgId, "member.invite");
+  const isPlatformAdmin =
+    session.user.role === "superadmin" || session.user.role === "admin";
+  const canInvite = isPlatformAdmin
+    ? await hasSystemPermission(userId, "user.manage")
+    : await hasTenantPermission(userId, orgId, "member.invite");
   if (!canInvite) return NextResponse.json({ error: "You do not have permission to invite members" }, { status: 403 });
 
-  const { email, role } = await req.json();
+  const { email, role, firstName, lastName, timezone, language } = await req.json();
   if (!email || !role) return NextResponse.json({ error: "Email and role are required" }, { status: 400 });
   if (!["admin", "member"].includes(role)) return NextResponse.json({ error: "Invalid role" }, { status: 400 });
 
@@ -33,29 +37,63 @@ export async function POST(
       if (existingMember) return NextResponse.json({ error: "User is already a member" }, { status: 409 });
     }
 
-    const token = crypto.randomBytes(32).toString("hex");
-    const expiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000);
+    const token = generateInviteToken();
+    const expiresAt = getInviteExpiry();
 
-    await prisma.invitation.create({
-      data: { orgId, email, tokenHash: hashToken(token), role, invitedBy: userId, expiresAt },
+    const existingInvitation = await prisma.invitation.findUnique({
+      where: { orgId_email: { orgId, email } },
     });
+
+    if (existingInvitation) {
+      await prisma.invitation.update({
+        where: { id: existingInvitation.id },
+        data: {
+          tokenHash: hashToken(token),
+          role: role as "admin" | "member",
+          firstName: firstName || null,
+          lastName: lastName || null,
+          timezone: timezone || "UTC",
+          language: language || "en",
+          expiresAt,
+          used: false,
+        },
+      });
+    } else {
+      await prisma.invitation.create({
+        data: {
+          orgId,
+          email,
+          tokenHash: hashToken(token),
+          role: role as "admin" | "member",
+          firstName: firstName || null,
+          lastName: lastName || null,
+          timezone: timezone || "UTC",
+          language: language || "en",
+          invitedBy: userId,
+          expiresAt,
+        },
+      });
+    }
 
     const [org, inviter] = await Promise.all([
       prisma.organization.findUnique({ where: { id: orgId } }),
       prisma.user.findUnique({ where: { id: userId } }),
     ]);
 
+    const inviterName = `${inviter?.firstName || ""} ${inviter?.lastName || ""}`.trim() || inviter?.email || "A team member";
+
     try {
       await sendMail({
         to: email,
         subject: `You're invited to join ${org?.name || "an organization"} on ${process.env.APP_NAME || "Acme Inc"}`,
         html: inviteMemberTemplate(
-          { name: "", email },
+          { name: `${firstName || ""} ${lastName || ""}`.trim() || email, email },
           {
-            inviterName: `${inviter?.firstName || "A"} ${inviter?.lastName || "team member"}`.trim() || "A team member",
+            inviterName,
             orgName: org?.name || "an organization",
             role,
             token,
+            expiresInHours: getInviteExpiryHours(),
           }
         ),
       });

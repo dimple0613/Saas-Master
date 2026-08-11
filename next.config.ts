@@ -11,7 +11,6 @@ const nextConfig: NextConfig = {
       { source: "/accounts", destination: "/admin/accounts", permanent: true },
       { source: "/user", destination: "/app", permanent: true },
       { source: "/members", destination: "/app/members", permanent: true },
-      { source: "/members/add", destination: "/app/members/add", permanent: true },
       { source: "/organizations/:path*", destination: "/app/organizations/:path*", permanent: true },
       { source: "/settings", destination: "/app/settings", permanent: true },
       { source: "/notifications", destination: "/app/notifications", permanent: true },

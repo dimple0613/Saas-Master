@@ -16,11 +16,21 @@ export async function GET(req: NextRequest) {
       return NextResponse.json({ error: "Invalid or expired invitation" }, { status: 404 });
     }
 
+    const existingUser = await prisma.user.findUnique({
+      where: { email: invite.email },
+      select: { id: true },
+    });
+
     return NextResponse.json({
       email: invite.email,
       role: invite.role,
       orgName: invite.org.name,
       orgId: invite.orgId,
+      firstName: invite.firstName,
+      lastName: invite.lastName,
+      timezone: invite.timezone,
+      language: invite.language,
+      hasAccount: Boolean(existingUser),
     });
   } catch (err) {
     console.error(err);
