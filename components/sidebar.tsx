@@ -19,7 +19,10 @@ export function Sidebar({ variant, collapsed, mobileOpen, onCloseMobile }: Sideb
   const { data: session } = useSession();
   const pathname = usePathname();
 
-  const navItems = getNavItems(variant);
+  const isAdminRole = session?.user?.role === "superadmin" || session?.user?.role === "admin";
+  const sidebarVariant = variant === "admin" || isAdminRole ? "admin" : "tenant";
+
+  const navItems = getNavItems(sidebarVariant);
 
   const userName = session?.user?.name || "User";
   const userEmail = session?.user?.email || "";
@@ -42,7 +45,7 @@ export function Sidebar({ variant, collapsed, mobileOpen, onCloseMobile }: Sideb
           lg:translate-x-0`}
       >
         <div className="flex h-full flex-col">
-          {variant === "admin" ? <AdminBrand collapsed={collapsed} /> : <OrgSwitcher collapsed={collapsed} />}
+          {sidebarVariant === "admin" ? <AdminBrand collapsed={collapsed} /> : <OrgSwitcher collapsed={collapsed} />}
 
           {/* Navigation */}
           <nav className="flex-1 overflow-y-auto px-2 py-2">
