@@ -25,6 +25,11 @@ const Toaster = ({ ...props }: ToasterProps) => {
         loading: <LoaderCircle className="h-5 w-5 animate-spin" />,
       }}
       toastOptions={{
+        style: {
+          "--toast-close-button-start": "unset",
+          "--toast-close-button-end": "0px",
+          "--toast-close-button-transform": "translate(35%, -35%)",
+        } as React.CSSProperties,
         classNames: {
           toast:
             "group toast group-[.toaster]:bg-background group-[.toaster]:text-foreground group-[.toaster]:border-border group-[.toaster]:shadow-lg",
