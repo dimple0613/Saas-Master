@@ -4,6 +4,46 @@ import { useEffect, useState } from "react";
 import { useOrg } from "@/lib/org-context";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { CreditCard, LayoutGrid, Users, DollarSign } from "lucide-react";
+import { ChartContainer, ChartTooltip, ChartTooltipContent, type ChartConfig } from "@/components/ui/chart";
+import { PieChart, Pie, Cell, type PieLabelRenderProps } from "recharts";
+
+const chartConfig = {
+  subscribers: {
+    label: "Subscribers",
+  },
+} satisfies ChartConfig;
+
+const RADIAN = Math.PI / 180;
+
+function renderPlanLabel(props: PieLabelRenderProps) {
+  const cx = Number(props.cx ?? 0);
+  const cy = Number(props.cy ?? 0);
+  const midAngle = Number(props.midAngle ?? 0);
+  const outerRadius = Number(props.outerRadius ?? 0);
+  const name = String(props.name ?? "");
+  const pct = Math.round(Number(props.percent ?? 0) * 100);
+
+  const cos = Math.cos(-midAngle * RADIAN);
+  const sin = Math.sin(-midAngle * RADIAN);
+  const labelRadius = outerRadius + 22;
+  const x = cx + labelRadius * cos;
+  const y = cy + labelRadius * sin;
+  const edgeX = cx + outerRadius * cos;
+  const edgeY = cy + outerRadius * sin;
+  const anchor = x > cx ? "start" : "end";
+
+  return (
+    <g>
+      <path d={`M${edgeX},${edgeY}L${x},${y}`} fill="none" strokeWidth={1} style={{ stroke: "var(--border)" }} />
+      <text x={x} y={y - 4} textAnchor={anchor} fontSize={11} style={{ fill: "var(--muted-foreground)" }}>
+        {name}
+      </text>
+      <text x={x} y={y + 12} textAnchor={anchor} fontSize={12} fontWeight={600} style={{ fill: "var(--foreground)" }}>
+        {pct}%
+      </text>
+    </g>
+  );
+}
 
 interface SubscriptionStats {
   totalPlans: number;
@@ -81,27 +121,48 @@ export function SubscriptionStats() {
         {plans.length > 0 && (
           <div className="mt-6">
             <p className="mb-2 text-sm font-medium text-foreground">Plan Distribution</p>
-            <div className="space-y-3">
-              {plans.map((plan) => (
-                <div key={plan.id}>
-                  <div className="mb-1 flex items-center justify-between text-xs">
-                    <span className="text-foreground">
-                      {plan.name}
-                      {!plan.isActive && <span className="ml-1 text-muted-foreground">(inactive)</span>}
-                    </span>
-                    <span className="text-muted-foreground">
-                      {plan.subscribers} subscriber{plan.subscribers === 1 ? "" : "s"}
-                    </span>
-                  </div>
-                  <div className="h-2 w-full overflow-hidden rounded-full bg-muted">
-                    <div
-                      className="h-full rounded-full bg-primary transition-all"
-                      style={{ width: `${Math.max(2, (plan.subscribers / totalSubscribers) * 100)}%` }}
+            <ChartContainer config={chartConfig} className="mx-auto aspect-auto h-[360px] w-full max-w-xl">
+              <PieChart>
+                <ChartTooltip
+                  content={
+                    <ChartTooltipContent
+                      hideLabel
+                      formatter={(value, name, item) => {
+                        const num = Number(value);
+                        const pct = totalSubscribers > 0 ? (num / totalSubscribers) * 100 : 0;
+                        const planName = item?.payload?.isActive === false ? `${name} (inactive)` : name;
+                        return (
+                          <span className="flex items-center gap-2">
+                            <span className="text-muted-foreground">{planName}</span>
+                            <span className="font-mono font-medium text-foreground tabular-nums">
+                              {num.toLocaleString()} · {pct.toFixed(0)}%
+                            </span>
+                          </span>
+                        );
+                      }}
                     />
-                  </div>
-                </div>
-              ))}
-            </div>
+                  }
+                />
+                <Pie
+                  data={plans}
+                  dataKey="subscribers"
+                  nameKey="name"
+                  cx="50%"
+                  cy="50%"
+                  innerRadius="62%"
+                  outerRadius="80%"
+                  paddingAngle={2}
+                  cornerRadius={5}
+                  stroke="none"
+                  labelLine={false}
+                  label={renderPlanLabel}
+                >
+                  {plans.map((plan, index) => (
+                    <Cell key={plan.id} fill={`var(--color-chart-${(index % 5) + 1})`} />
+                  ))}
+                </Pie>
+              </PieChart>
+            </ChartContainer>
           </div>
         )}
       </CardContent>
