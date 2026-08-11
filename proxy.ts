@@ -42,8 +42,12 @@ export const proxy = auth((req) => {
     return NextResponse.next();
   }
 
-  // Superadmins don't use the tenant-facing pages.
-  if (pathname.startsWith("/app") && role === "superadmin") {
+  // Superadmins don't use the tenant-facing pages, except the Members list.
+  if (
+    pathname.startsWith("/app") &&
+    role === "superadmin" &&
+    !pathname.startsWith("/app/members")
+  ) {
     return NextResponse.redirect(new URL("/admin", req.url));
   }
 
