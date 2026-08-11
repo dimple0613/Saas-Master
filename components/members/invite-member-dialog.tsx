@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { toast } from "sonner";
+import { notifySuccess, notifyError } from "@/lib/toast";
 import { Copy, Check } from "lucide-react";
 import { useOrg } from "@/lib/org-context";
 import {
@@ -133,8 +133,10 @@ export function InviteMemberDialog({ open, onOpenChange, onSuccess }: InviteMemb
       setInviteLink(`${window.location.origin}${data.link}`);
       setSuccess(true);
       onSuccess?.();
+      notifySuccess("Member invitation sent successfully");
     } catch {
       setError("Something went wrong. Please try again.");
+      notifyError("Something went wrong. Please try again.");
     } finally {
       setLoading(false);
     }
@@ -145,10 +147,10 @@ export function InviteMemberDialog({ open, onOpenChange, onSuccess }: InviteMemb
     try {
       await navigator.clipboard.writeText(inviteLink);
       setCopied(true);
-      toast.success("Invite link copied to clipboard");
+      notifySuccess("Invite link copied to clipboard");
       setTimeout(() => setCopied(false), 2000);
     } catch {
-      toast.error("Could not copy the link");
+      notifyError("Could not copy the link");
     }
   }
 

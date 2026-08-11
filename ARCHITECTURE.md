@@ -96,6 +96,10 @@ App Router route handlers under `app/api/*` (JSON). All authenticated routes cal
 
 `logActivity()` inserts into `activity_logs` with `action`, `details` (JSON string), optional `orgId`. Used for audit trails; surfaced via `app/api/activity` and dashboard "recent activity" widgets.
 
+### 7. Toast notifications (`lib/toast.ts`)
+
+Global toast system backed by `sonner` (rendered by `components/ui/sonner.tsx`, mounted once in the root layout). Toasts render at the top-right, auto-dismiss after 4s, and include a per-type icon (success/error/warning/info) plus a close button. Use the typed helpers (`notifySuccess`, `notifyError`, `notifyWarning`, `notifyInfo`, `notifyPromise`) instead of calling `sonner` directly so all modules trigger consistent notifications.
+
 ## Data Model (summary)
 
 | Model | Table | Purpose |

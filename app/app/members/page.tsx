@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { useSession } from "next-auth/react";
 import { UserPlus, Users, Shield, Mail, Clock, MoreVertical, CheckCircle2, Loader2, Trash2, Copy, Send } from "lucide-react";
-import { toast } from "sonner";
+import { notifySuccess, notifyError } from "@/lib/toast";
 import { AppBreadcrumb } from "@/components/app-breadcrumb";
 import { useOrg } from "@/lib/org-context";
 import {
@@ -227,14 +227,14 @@ function MemberRowActions({ member }: { member: Member }) {
       const res = await fetch(`/api/orgs/${orgId}/invitations/${invitationId}/link`, { method: "POST" });
       const data = await res.json();
       if (data.error) {
-        toast.error(data.error);
+        notifyError(data.error);
         return;
       }
       const link = `${window.location.origin}${data.link}`;
       await navigator.clipboard.writeText(link);
-      toast.success("Invite link copied to clipboard");
+      notifySuccess("Invite link copied to clipboard");
     } catch {
-      toast.error("Something went wrong");
+      notifyError("Something went wrong");
     } finally {
       setBusy(false);
     }
@@ -248,12 +248,12 @@ function MemberRowActions({ member }: { member: Member }) {
       const res = await fetch(`/api/orgs/${orgId}/invitations/${invitationId}/resend`, { method: "POST" });
       const data = await res.json();
       if (data.error) {
-        toast.error(data.error);
+        notifyError(data.error);
         return;
       }
-      toast.success("Invitation resent");
+      notifySuccess("Invitation resent");
     } catch {
-      toast.error("Something went wrong");
+      notifyError("Something went wrong");
     } finally {
       setBusy(false);
     }
@@ -267,13 +267,13 @@ function MemberRowActions({ member }: { member: Member }) {
       const res = await fetch(`/api/orgs/${orgId}/invitations/${invitationId}`, { method: "DELETE" });
       const data = await res.json();
       if (data.error) {
-        toast.error(data.error);
+        notifyError(data.error);
         return;
       }
-      toast.success("Invitation withdrawn");
+      notifySuccess("Invitation withdrawn");
       setRefreshed((n) => n + 1);
     } catch {
-      toast.error("Something went wrong");
+      notifyError("Something went wrong");
     } finally {
       setBusy(false);
     }
